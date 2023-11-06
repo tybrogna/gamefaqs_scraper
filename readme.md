@@ -1,0 +1,1 @@
+Gamefaqs might disappear any day. Can't ignore that forever. I, for one, use it, and am writing this scraper (very slowly) to preserve any and all guide content on there (Sorry forumboards, you're valuable too, but i gotta focus). This is also a not_so_secret way to teach myself the ways and conventions of python. hopefully i won't pick up too many bad habits along the way.
