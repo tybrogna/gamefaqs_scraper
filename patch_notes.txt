@@ -1,0 +1,8 @@
+Nov 7 2023
+    redid file reading and writing to make more sense
+        added helper functions, no reading/writing is inline anymore
+        moved io functions to a new file, pkl_io.py
+    making the Scraping_Step_Struct more of a real object, for extensibility purposes
+        gonna have to rename that in the future. pythoners must have some sort of agreed naming standard
+    added a test function, will be useful going forward to not have to make web calls all the time to test
+    TODO: update get_console_links.py to use pkl_io
