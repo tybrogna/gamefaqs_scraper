@@ -1,3 +1,9 @@
+Nov 8 2023
+    Further IO adjustments, mainly cleaning up the weird "check completion" style functions I left lying around
+        added append_all_to_pkl()
+    Split functions that did two things into their own specific functions. ex: check the progress file, but create it if it isn't there
+    Progress file updates when steps complete
+
 Nov 7 2023
     redid file reading and writing to make more sense
         added helper functions, no reading/writing is inline anymore

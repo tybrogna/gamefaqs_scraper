@@ -6,7 +6,7 @@ import os
 
 import pkl_io as io
 
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'}
+HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'}
 
 url_gamefaqs = "https://gamefaqs.gamespot.com"
 url_consoles = "/games/systems"
@@ -51,32 +51,14 @@ def get_game_links(soup_page):
         url_game = list(table_row.children)[0].get('href')
         print(url_game)
 
-def check_completion(save_location):
-    if not os.path.exists(save_location) or os.stat(save_location).st_size == 0:
-        with open(save_location, 'wb') as pickout:
-            completion_tuple = ("completed", False)
-            pickle.dump(completion_tuple, pickout, pickle.HIGHEST_PROTOCOL)
-        return False
-
-    with open(save_location, 'rb') as pickin:
-        pkl_obj = pickle.load(pickin)
-        if (pkl_obj[0] == 'completed'):
-            return pkl_obj[1]
-
-def run(save_location):
-    print("  scanning all consoles on gamefaqs")
-
+def run(step):
+    print("  Scanning all consoles on gamefaqs...")
     soup_consoles = heat_soup(url_gamefaqs + url_consoles)
     console_page_all_locations = get_console_locations_list(soup_consoles)
     console_page_all_links = map(console_location_to_link, console_page_all_locations)
     console_links = list(filter(verify_games_on_page, console_page_all_links))
-    to_save = len(console_link)
-    saved = 0
-    with open(save_location, 'wb') as pickout:
-        for console_link in console_links:
-            link_tuple = (console_link, False)
-            print("saving link {0}".format(console_link))
-            pickle.dump(link_tuple, pickout, pickle.HIGHEST_PROTOCOL)
-            saved = saved + 1
-
-    return saved == to_save
+    io.append_all_to_pkl(step, console_links)
+    # fake_list = [("link1", False),("link2", False),("link3", False),("link4", False),("link5", False)]
+    # io.append_all_to_pkl(step, fake_list)
+    print("  Console Links Saved!!")
+    return True
