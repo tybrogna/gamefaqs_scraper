@@ -17,9 +17,10 @@ class Save_Name:
         self.name = name
 
 class Scraping_Step_Struct(Save_Name):
-    def __init__(self, name, save_loc, completion):
+    def __init__(self, name, run_func, save_loc, completion):
         super().__init__(name)
         self.save_loc = save_loc
+        self.run_func = run_func
         self.completion = completion
 
     def __eq__(self, other):
@@ -31,9 +32,13 @@ class Scraping_Step_Struct(Save_Name):
         return "{0} \n    {1}, {2}" \
         .format(self.name, self.save_loc, "Finished" if self.completion else "Incomplete")
 
+def dummy_func(arg):
+    print("im dum")
+    return
+
 steps = [
-    Scraping_Step_Struct("get_console_links", data_location + "console_link_list.pickle", False),
-    Scraping_Step_Struct("get_game_links", data_location + "game_link_list.pickle", False)]
+    Scraping_Step_Struct("get_console_links", get_console_links.run, data_location + "console_link_list.pickle", False),
+    Scraping_Step_Struct("get_game_links", dummy_func, data_location + "game_link_list.pickle", False)]
 
 def create_progress_file():
     if not os.path.exists(save_progress_location) or os.stat(save_progress_location).st_size == 0:
@@ -54,15 +59,12 @@ def update_progress(step, completion):
 
 def run_step(step):
     print("running {0}".format(step.name))
-    if step.name == "get_console_links":
-        complete = get_console_links.run(step.save_loc)
-        if complete:
-            update_progress(step, True)
-            print("progress updated: {0} => Complete".format(step.name))
-        else:
-            print("failed")
+    complete = step.run_func(step.save_loc)
+    if complete:
+        update_progress(step, True)
+        print("progress updated: {0} => Complete".format(step.name))
     else:
-        print("no command")
+        print("{0} failed".format(step.name))
 
 def run():
     # create folder to hold position saves

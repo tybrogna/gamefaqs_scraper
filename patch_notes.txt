@@ -1,3 +1,6 @@
+Nov 9 2023
+    Step_Scraping_Struct makes use of function pointers. starting to understand modules...honestly wondering why python even has classes at this point
+
 Nov 8 2023
     Further IO adjustments, mainly cleaning up the weird "check completion" style functions I left lying around
         added append_all_to_pkl()

@@ -16,7 +16,7 @@ url_faqs = "/faqs"
 
 # creates a soup object of the url in parameter
 def heat_soup(url):
-    req = requests.get(url, headers=headers)
+    req = requests.get(url, headers=HEADERS)
     print(str(req.status_code) + " from " + url)
     return BeautifulSoup(req.text, "html.parser")
 
