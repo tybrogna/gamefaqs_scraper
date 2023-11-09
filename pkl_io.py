@@ -1,9 +1,11 @@
 import pickle
 import os
 
+
 def __create_file(file_loc):
     if not os.path.exists(file_loc) or os.stat(file_loc).st_size == 0:
         open(file_loc, 'w').close()
+
 
 def overwrite_in_pkl(file_loc, old_data, new_data):
     """
@@ -30,6 +32,7 @@ def overwrite_in_pkl(file_loc, old_data, new_data):
     for data in file_data:
         pickle.dump(data, write_file)
     write_file.close()
+
 
 def append_all_to_pkl(file_loc, data_array):
     """
@@ -79,6 +82,7 @@ def append_to_pkl(file_loc, new_data):
     pickle.dump(new_data, write_file)
     write_file.close()
 
+
 def pkl_contains_name(file_loc, name):
     """
     finds a name in a file. return
@@ -95,6 +99,21 @@ def pkl_contains_name(file_loc, name):
                     return next_line
             except EOFError:
                 break
+
+
+def unpickle(file_loc):
+    if not os.path.exists(file_loc) or os.stat(file_loc).st_size == 0:
+        return []
+    file_data = []
+    read_file = open(file_loc, "rb+")
+    while True:
+        try:
+            file_data.append(pickle.load(read_file))
+        except EOFError:
+            break
+    read_file.close()
+    return file_data
+
 
 def test_print_pkl(file_loc):
     with open(file_loc, "rb+") as pickin:

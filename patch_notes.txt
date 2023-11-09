@@ -1,4 +1,20 @@
 Nov 9 2023
+    Created progress_data_strctures.py
+        probably the wrong name, but holds the classes that ultimately get written to pickle files
+        split `Scraping_Step_Struct` into three steps: Main_Step, File_Step, and Link_Step
+            furter revision will be necessary to these, but they're in a good place data-managment wise, even if they don't make much sense
+    Created web_consts.py
+        probably the wrong name, but holds the url pieces and common soup functions to be used all over the code
+    Created get_game_links.py
+        the next step in the scraping, finding the links of all the games associated with a system. ultimately, each game will be not really 
+        be associated with its platform, but gotta start somewhere
+    I have a linter in sublime now!! proper code styling here i come
+
+    `test` var added to get_console_links.py. this file and step are nearly finalized
+    added `unpickle` function to pkl_io.py
+
+
+Nov 9 2023
     Step_Scraping_Struct makes use of function pointers. starting to understand modules...honestly wondering why python even has classes at this point
 
 Nov 8 2023
