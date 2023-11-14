@@ -23,12 +23,12 @@ def create_file_steps(console_links_file):
 def create_console_progress_files(step_folder, console_save_loc):
     if not os.path.exists(step_folder):
         os.makedirs(step_folder)
-        print("Data folder created")
+        print("  Data folder created")
 
-    page_search_save_file = step_folder + "page_at"
+    page_search_save_file = step_folder + "\\page_at"
 
     if not os.path.exists(page_search_save_file) or os.stat(page_search_save_file).st_size == 0:
-        open(page_search_save_file, 'w').close()
+        io.append_to_pkl(page_search_save_file, "0")
 
     first_game_save = step_folder + "\\" + console_save_loc + "0"
 
@@ -36,13 +36,12 @@ def create_console_progress_files(step_folder, console_save_loc):
         print("  No Game Link Progress file found, creating Game Link Progress file")
         open(first_game_save, 'w').close()
 
+
 def read_console_progress_file(step_folder, console_save_loc):
     for itr in range(200):
         file_loc = step_folder.name + '\\' + console_save_loc + str(itr)
-        game_links = io.unpickle(file_loc)
-        if game_links > 10_000:
-            return file_loc + itr
-
+        if not os.path.exists(file_loc):
+            return step_folder.name + '\\' + console_save_loc + str(itr - 1)
 
 def create_page_url(console_name, pg_at):
     ret_url = web.URL_gamefaqs + console_name + web.URL_list
@@ -53,8 +52,8 @@ def create_page_url(console_name, pg_at):
 
 
 def get_all_game_id_and_name(page_soup):
-    page_soup.select("tr td.rmain:nth-of-type(-n+2) a")
-
+    guide_links = page_soup.select("tr td.rmain:nth-of-type(-n+2) a")
+    # do this next
 
 def run(main_step_save_loc, previous_step_save_loc):
     print("  Getting all game links...")
@@ -65,10 +64,13 @@ def run(main_step_save_loc, previous_step_save_loc):
             print("  {0} is done".format(console_step.name))
         else:
             create_console_progress_files(console_step.save_loc)
-            file_at = read_console_progress_file(console_step.name, console_step.save_loc)
-            game_links = io.unpickle(file_at)
-            pg_at = games_complete + len(game_links) / GAMES_PER_PAGE
-            print(pg_at)
+            save_file_at = read_console_progress_file(console_step.name, console_step.save_loc)
+            pg_at = io.unpickle(console_step.name + "\\page_at")
             pg_url = create_page_url(console_step.name, pg_at)
-            web.heat_soup(pg_url)
-            print(pg_url)
+            page_soup = web.heat_soup(pg_url)
+            game_links = get_all_game_id_and_name(page_soup)
+            try:
+
+            except KeyboardInterrupt:
+
+https://gamefaqs.gamespot.com/pc/629337-text-a-summer-story/faqs
