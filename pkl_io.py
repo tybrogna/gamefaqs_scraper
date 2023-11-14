@@ -7,6 +7,12 @@ def __create_file(file_loc):
         open(file_loc, 'w').close()
 
 
+def __becomes_pickle(file_loc):
+    if not file_loc.endswith(".pickle"):
+        file_loc = file_loc + ".pickle"
+    return file_loc
+
+
 def overwrite_in_pkl(file_loc, old_data, new_data):
     """
     replaces old_data with new_data in a pickle at file_loc
@@ -15,6 +21,7 @@ def overwrite_in_pkl(file_loc, old_data, new_data):
     :param old_data: data in the file to replace
     :param new_data: data going into the file
     """
+    file_loc = __becomes_pickle(file_loc)
     file_data = []
     read_file = open(file_loc, "rb+")
     while True:
@@ -41,6 +48,7 @@ def append_all_to_pkl(file_loc, data_array):
     :param file_loc: filepath string location of pickle to read
     :param data_array: array of data to be appended
     """
+    file_loc = __becomes_pickle(file_loc)
     __create_file(file_loc)
     file_data = []
     read_file = open(file_loc, "rb+")
@@ -66,6 +74,7 @@ def append_to_pkl(file_loc, new_data):
     :param file_loc: filepath string location of pickle to read
     :param new_data: data going into the file
     """
+    file_loc = __becomes_pickle(file_loc)
     __create_file(file_loc)
     file_data = []
     read_file = open(file_loc, "rb+")
@@ -91,6 +100,7 @@ def pkl_contains_name(file_loc, name):
     :param name: name to find
     :return: object with the corrent name if found, else none
     """
+    file_loc = __becomes_pickle(file_loc)
     with open(file_loc, "rb+") as pickin:
         while True:
             try:
@@ -102,7 +112,9 @@ def pkl_contains_name(file_loc, name):
 
 
 def unpickle(file_loc):
+    file_loc = __becomes_pickle(file_loc)
     if not os.path.exists(file_loc) or os.stat(file_loc).st_size == 0:
+        __create_file(file_loc)
         return []
     file_data = []
     read_file = open(file_loc, "rb+")
@@ -116,6 +128,7 @@ def unpickle(file_loc):
 
 
 def test_print_pkl(file_loc):
+    file_loc = __becomes_pickle(file_loc)
     with open(file_loc, "rb+") as pickin:
         pickin.seek(0)
         while True:

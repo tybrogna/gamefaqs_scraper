@@ -11,7 +11,7 @@ exp_link_check = "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z
 gamefaqs_location = './gamefaqs/'
 data_location = './data/'
 
-save_progress_location = data_location + 'progress.pickle'
+save_progress_location = data_location + 'progress'
 
 
 # class Save_Name:
@@ -42,8 +42,8 @@ def dummy_func(arg):
 
 
 steps = [
-    ds.Main_Step("get_console_links", get_console_links.run, data_location + "console_link_list.pickle", False),
-    ds.Main_Step("get_game_links", get_game_links.run, data_location + "game_link_list.pickle", False)]
+    ds.Main_Step("get_console_links", get_console_links.run, data_location + "console_link_list", False),
+    ds.Main_Step("get_game_links", get_game_links.run, data_location + "game_link_list", False)]
 
 
 def create_progress_file():
