@@ -5,7 +5,7 @@ import pkl_io as io
 import web_consts as web
 import progress_data_structures as ds
 
-test = False
+test = True
 
 
 def heat_soup(url):

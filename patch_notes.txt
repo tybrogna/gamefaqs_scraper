@@ -1,3 +1,8 @@
+Nov 14 2023
+    Added bizarre class in get_game_links thats supposed to block keyboard interrupts. will need to use later
+    offloading more file io tedium into the actual file io module. this includes making sure files being created/read are in the right folder, have the right file suffix, and actually exist
+    uncommenting things as I go in get_game_links. currently in a runnable state, doesn't actually save any links yet
+
 Nov 9 2023
     Created progress_data_strctures.py
         probably the wrong name, but holds the classes that ultimately get written to pickle files

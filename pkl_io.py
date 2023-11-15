@@ -1,10 +1,56 @@
 import pickle
 import os
 
+DATA_FOLDER = './data/'
+override_folder = ''
 
-def __create_file(file_loc):
+
+def __save_in_data(file_loc):
+    if override_folder != '' and not file_loc.startswith(override_folder):
+        file_loc = override_folder + file_loc
+    elif not file_loc.startswith(DATA_FOLDER):
+        file_loc = DATA_FOLDER + file_loc
+    return file_loc
+
+
+def __becomes_pickle(file_loc):
+    if not file_loc.endswith(".pickle"):
+        file_loc = file_loc + ".pickle"
+    return file_loc
+
+
+def setup():
+    global override_folder
+    if not override_folder == '' and not override_folder.endswith('/'):
+        override_folder = override_folder + '/'
+    if not os.path.exists(DATA_FOLDER):
+        os.makedirs(DATA_FOLDER)
+        print('data folder created')
+
+
+def exists(file_loc):
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
+    if not os.path.exists(file_loc):
+        return False
+    return True
+
+
+def create_file(file_loc):
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
     if not os.path.exists(file_loc) or os.stat(file_loc).st_size == 0:
         open(file_loc, 'w').close()
+        return True
+    return False
+
+
+def create_folder(folder_loc):
+    folder_loc = __save_in_data(folder_loc)
+    if not os.path.exists(folder_loc):
+        os.makedirs(folder_loc)
+        return True
+    return False
 
 
 def overwrite_in_pkl(file_loc, old_data, new_data):
@@ -15,6 +61,8 @@ def overwrite_in_pkl(file_loc, old_data, new_data):
     :param old_data: data in the file to replace
     :param new_data: data going into the file
     """
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
     file_data = []
     read_file = open(file_loc, "rb+")
     while True:
@@ -41,7 +89,9 @@ def append_all_to_pkl(file_loc, data_array):
     :param file_loc: filepath string location of pickle to read
     :param data_array: array of data to be appended
     """
-    __create_file(file_loc)
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
+    create_file(file_loc)
     file_data = []
     read_file = open(file_loc, "rb+")
     while True:
@@ -66,7 +116,9 @@ def append_to_pkl(file_loc, new_data):
     :param file_loc: filepath string location of pickle to read
     :param new_data: data going into the file
     """
-    __create_file(file_loc)
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
+    create_file(file_loc)
     file_data = []
     read_file = open(file_loc, "rb+")
     while True:
@@ -91,6 +143,8 @@ def pkl_contains_name(file_loc, name):
     :param name: name to find
     :return: object with the corrent name if found, else none
     """
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
     with open(file_loc, "rb+") as pickin:
         while True:
             try:
@@ -102,7 +156,10 @@ def pkl_contains_name(file_loc, name):
 
 
 def unpickle(file_loc):
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
     if not os.path.exists(file_loc) or os.stat(file_loc).st_size == 0:
+        create_file(file_loc)
         return []
     file_data = []
     read_file = open(file_loc, "rb+")
@@ -116,6 +173,8 @@ def unpickle(file_loc):
 
 
 def test_print_pkl(file_loc):
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
     with open(file_loc, "rb+") as pickin:
         pickin.seek(0)
         while True:
