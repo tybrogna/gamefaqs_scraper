@@ -1,3 +1,16 @@
+Nov 17 2023
+    added an elaborate "Thread" Locking System
+        if this app isn't fetching web data, its writing files. and since this is designed to be stopped and re-run at any time (and this is taking up MOST OF THE WORK ON THIS PROJECT), I needed a way to guranatee that, when interruped, work wouldn't be lost, missing, or corrupt.
+        pkl_io.py - added atomicwrites: pip module that claims to only write a file if all the data is applied
+        get_game_links.py - Added force_save(): attempts to prevent keyboard interrupts with some cute loop-retrying functionality. will need to be expanded later. will still close the program if interrupted three times
+    get_game_links.py - actually gets game links now! and saves them to their appropriate console! games are unique, there will be MANY duplicates and duplicate guides. this will also need work
+    renamed web_consts.py -> constants.py
+    added file locations to constants.py
+        this allows the run_func pointers in the Main_Step class not require any parameters. any data each module needs is a constant, and lives in the appropriate file
+        also allows the stupid 'previous_step' stuff in main_gamefaqs_scraper.py to be removed.
+    I learned about the unpacking operator in python!
+
+
 Nov 14 2023
     Added bizarre class in get_game_links thats supposed to block keyboard interrupts. will need to use later
     offloading more file io tedium into the actual file io module. this includes making sure files being created/read are in the right folder, have the right file suffix, and actually exist

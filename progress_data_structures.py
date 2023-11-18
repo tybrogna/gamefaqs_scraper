@@ -6,7 +6,7 @@ class Save_Name:
 
 
 class Main_Step(Save_Name):
-    def __init__(self, name, run_func, save_loc, completion):
+    def __init__(self, name, run_func, save_loc="", completion=False):
         super().__init__(name)
         self.save_loc = save_loc
         self.run_func = run_func
@@ -19,7 +19,11 @@ class Main_Step(Save_Name):
 
     def __str__(self):
         return "Main Step {0} \n    {1}, {2}, {3}" \
-            .format(self.name, self.run_func, self.save_loc, "Finished" if self.completion else "Incomplete")
+            .format(
+                self.name,
+                self.run_func,
+                self.save_loc if self.save_loc != "" else "No Save Location",
+                "Finished" if self.completion else "Incomplete")
 
 
 class File_Step(Save_Name):

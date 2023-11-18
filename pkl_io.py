@@ -1,3 +1,4 @@
+from atomicwrites import atomic_write as atom
 import pickle
 import os
 
@@ -76,10 +77,15 @@ def overwrite_in_pkl(file_loc, old_data, new_data):
             break
     read_file.close()
 
-    write_file = open(file_loc, 'wb+')
-    for data in file_data:
-        pickle.dump(data, write_file)
-    write_file.close()
+    with atom(file_loc, mode='wb', overwrite=True) as write_file:
+        for data in file_data:
+            bin_data = pickle.dumps(data)
+            write_file.write(bin_data)
+
+    # write_file = open(file_loc, 'wb+')
+    # for data in file_data:
+    #     pickle.dump(data, write_file)
+    # write_file.close()
 
 
 def append_all_to_pkl(file_loc, data_array):
@@ -101,12 +107,21 @@ def append_all_to_pkl(file_loc, data_array):
             break
     read_file.close()
 
-    write_file = open(file_loc, "wb+")
-    for data in file_data:
-        pickle.dump(data, write_file)
-    for data in data_array:
-        pickle.dump(data, write_file)
-    write_file.close()
+    with atom(file_loc, mode='wb', overwrite=True) as write_file:
+        for data in file_data:
+            bin_data = pickle.dumps(data)
+            write_file.write(bin_data)
+        for data in data_array:
+            bin_data = pickle.dumps(data)
+            write_file.write(bin_data)
+
+    # write_file = open(file_loc, "wb+")
+    # for data in file_data:
+    #     pickle.dump(data, write_file)
+    # for data in data_array:
+    #     pickle.dump(data, write_file)
+    # write_file.close()
+    return True
 
 
 def append_to_pkl(file_loc, new_data):
@@ -128,11 +143,18 @@ def append_to_pkl(file_loc, new_data):
             break
     read_file.close()
 
-    write_file = open(file_loc, "wb+")
-    for data in file_data:
-        pickle.dump(data, write_file)
-    pickle.dump(new_data, write_file)
-    write_file.close()
+    with atom(file_loc, mode='wb', overwrite=True) as write_file:
+        for data in file_data:
+            bin_data = pickle.dumps(data)
+            write_file.write(bin_data)
+        bin_data = pickle.dumps(new_data)
+        write_file.write(bin_data)
+    return True
+    # write_file = open(file_loc, "wb+")
+    # for data in file_data:
+    #     pickle.dump(data, write_file)
+    # pickle.dump(new_data, write_file)
+    # write_file.close()
 
 
 def pkl_contains_name(file_loc, name):
@@ -172,6 +194,15 @@ def unpickle(file_loc):
     return file_data
 
 
+def delete_pkl(file_loc):
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
+    if not os.path.exists(file_loc):
+        return False
+    os.remove(file_loc)
+    return True
+
+
 def test_print_pkl(file_loc):
     file_loc = __becomes_pickle(file_loc)
     file_loc = __save_in_data(file_loc)
@@ -183,3 +214,19 @@ def test_print_pkl(file_loc):
                 print(line_var)
             except EOFError:
                 break
+
+
+def test_atomic_write():
+    file_loc = "test"
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
+    garbo1 = ["hey","yeah","no"]
+    garbo2 = {'dum':1,'uesless':"two"}
+    with atom(file_loc, mode='wb', overwrite=True) as write_file:
+        bin_dump = pickle.dumps(garbo1)
+        write_file.write(bin_dump)
+        bin_dump = pickle.dumps(garbo2)
+        write_file.write(bin_dump)
+
+    test_print_pkl(file_loc)
+    # write_file.close()
