@@ -15,26 +15,27 @@ def dummy_func(arg):
     return
 
 
-def sort_links_by_priority(arg, console_links_save_loc):
-    print('oof')
+def remove_console_link():
+    for name in constants.CONSOLE_EXCLUDE:
+        saved_name = io.pkl_contains_name(constants.CONSOLE_LINK_LIST_LOC, name)
+        if saved_name:
+            finish_step = saved_name.deepcopy()
+            finish_step.completion = True
+            io.overwrite_in_pkl(constants.CONSOLE_LINK_LIST_LOC, saved_name, finish_step)
 
 
 steps = [
-    ds.Main_Step("get_console_links", get_console_links.run, constants.CONSOLE_LINK_LIST_LOC, False),
-    # ds.Main_Step("sort_console_links"),
-    ds.Main_Step("get_game_links", get_game_links.run, constants.GAME_LINK_LIST_LOC, False)]
+    ds.Main_Step('get_console_links', get_console_links.run, constants.CONSOLE_LINK_LIST_LOC, False),
+    # ds.Main_Step('exclude_console_links', remove_console_link),
+    ds.Main_Step('get_game_links', get_game_links.run, constants.GAME_LINK_LIST_LOC, False),
+    ds.Main_Step('save_games_as_dictionary', dummy_func)]
+    # ds.Main_Step('download_guides')]
 
 
 def create_progress_file():
     if io.create_file("progress"):
         for step in steps:
             io.append_to_pkl("progress", step)
-    # if not os.path.exists(save_progress_location) or os.stat(save_progress_location).st_size == 0:
-    #     print("No Major Progress file found, creating Major Progress file")
-    #     open(save_progress_location, 'w').close()
-    #     for step in steps:
-    #         io.append_to_pkl(save_progress_location, step)
-    #     return
 
 
 def check_progress(step_name):
@@ -49,22 +50,13 @@ def update_progress(step, completion):
 
 
 def run():
-    # create folder to hold position saves
-    # if not os.path.exists("data_location"):
-    #     os.makedirs('data')
-    #     print("Data folder created")
     io.setup()
-
     create_progress_file()
-
-    # previous_step = ds.Main_Step("", dummy_func, "", True)
-
     for step in steps:
         step_complete = check_progress(step.name)
 
         if step_complete:
             print("{0} is already complete".format(step.name))
-            # previous_step = step
             continue
         else:
             print("running {0}".format(step.name))
@@ -74,9 +66,6 @@ def run():
                 print("progress updated: {0} => Complete".format(step.name))
             else:
                 print("{0} failed".format(step.name))
-            # previous_step = step
-
-            # run_step(step)
 
 
 def test():

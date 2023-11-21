@@ -1,3 +1,11 @@
+Nov 21 2023
+    Moved the "Elaborate "Thread" Locking System" into a generic, reusable function
+    moving onto the part where i gotta start playing with BIG data, think i might need to do a database
+    if i do a database tho, i implicitly need an actual user interface to see the guides.
+    concered about whats next honestly. could just load up all the txt files sorted into alphabetical folders, 
+        but there's a reason why web sites have crazy backends. need to research building a gui
+
+
 Nov 17 2023
     added an elaborate "Thread" Locking System
         if this app isn't fetching web data, its writing files. and since this is designed to be stopped and re-run at any time (and this is taking up MOST OF THE WORK ON THIS PROJECT), I needed a way to guranatee that, when interruped, work wouldn't be lost, missing, or corrupt.

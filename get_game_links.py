@@ -8,8 +8,7 @@ import constants
 import progress_data_structures as ds
 
 
-GAMES_PER_PAGE = 100
-test = True
+test = False
 
 
 def create_file_steps(console_links_file):
@@ -52,31 +51,6 @@ def get_all_game_id_and_name(page_soup):
     return guide_links
 
 
-def force_save(console_step_save_loc, guide_links, page_file_loc, page_at):
-    if test:
-        print('saving {0} links to {1}'.format(len(guide_links), console_step_save_loc))
-    done = False
-    links_saved = False
-    interrupt_count = 0
-    next_page = int(page_at) + 1
-    while not done:
-        try:
-            if not links_saved:
-                links_saved = io.append_all_to_pkl(console_step_save_loc, guide_links)
-            io.overwrite_in_pkl(page_file_loc, page_at, str(next_page))
-            done = True
-        except KeyboardInterrupt:
-            print('SAVING PROGRESS, DON\'T INTERRUPT')
-            interrupt_count = interrupt_count + 1
-            if interrupt_count <= 3:
-                continue
-            else:
-                print('Ok fine jeez you got it chief')
-                done = True
-    if test:
-        print('...saved!')
-
-
 def run():
     print("  Getting all game links...")
     steps = create_file_steps(constants.CONSOLE_LINK_LIST_LOC)
@@ -96,6 +70,11 @@ def run():
             url_pg = create_page_url(console_step.name, page_at)
             if test:
                 print("get_game_links - resuming on page {0}, at {1}".format(page_at, url_pg))
+                if int(page_at) > 1:
+                    finished_step = ds.File_Step(console_step.name, console_step.link, console_step.save_loc, True)
+                    io.overwrite_in_pkl(constants.CONSOLE_LINK_LIST_LOC, console_step, finished_step)
+                    io.test_print_pkl(constants.CONSOLE_LINK_LIST_LOC)
+
             html_soup = constants.heat_soup(url_pg)
             if not page_contains_games(html_soup):
                 io.delete_pkl(page_file_loc)
@@ -113,5 +92,10 @@ def run():
                 guide_link_steps.append(ds.Link_Step(guide_name, guide_remove_console, False))
                 if test:
                     print(guide_link_steps[-1])
-            force_save(console_step.save_loc, guide_link_steps, page_file_loc, page_at)
+            save_data = [console_step.save_loc, guide_link_steps]
+            save_page = [page_file_loc, page_at, int(page_at) + 1]
+            print("  Saving {0} game links...".format(len(guide_link_steps)))
+            constants.force_save(save_data, save_page)
+            print("  Done")
+            # force_save(console_step.save_loc, guide_link_steps, page_file_loc, page_at)
             input("Press Enter to continue...")

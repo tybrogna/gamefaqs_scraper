@@ -81,6 +81,7 @@ def overwrite_in_pkl(file_loc, old_data, new_data):
         for data in file_data:
             bin_data = pickle.dumps(data)
             write_file.write(bin_data)
+    return True
 
     # write_file = open(file_loc, 'wb+')
     # for data in file_data:
