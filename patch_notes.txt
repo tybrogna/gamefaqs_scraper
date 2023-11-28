@@ -1,3 +1,17 @@
+Nov 27 2023
+    I started adding a database system.
+        its a mess. considering the save point system i made, its a little unnecessary, and i dont have actual access to the gamefaqs database, which means whatever database i have here is going to be a shallow imitation of the real one.
+        storing dl'd data in a database has ramifications of needing a more complicated viewer than notepad, but the payment in "work experience" is vital
+        its not done, and after going a little nuts, i called it off before continuing the pickle way
+    deleted compress_games.py, didn't need it
+    deleted scraper_vars.py, never needed it
+    added get_guides.py
+        coming along much slower than i would have wanted. needed to make decisions, solve problems
+        one game can be feature in many different consoles with multiple names in different languages. how to only download the guides for a game once, rather than consoles by names times?
+        solved, i think. get the game, get its aliases on page, get the guides, mark each console file with the game as complete
+    get_console_links.py now saves a second console list file, for checking progress during guide downloading
+    Author's note: This should have been a branch. I really just followed my passion here, without a care for structure or order.
+
 Nov 21 2023
     Moved the "Elaborate "Thread" Locking System" into a generic, reusable function
     moving onto the part where i gotta start playing with BIG data, think i might need to do a database

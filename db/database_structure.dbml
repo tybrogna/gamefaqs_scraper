@@ -1,0 +1,60 @@
+// Use DBML to define your database structure
+// https://dbdiagram.io/d
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table consoles {
+  id integer [primary key, increment, unique, not null]
+  name varchar [not null]
+  handheld boolean
+  family varchar
+}
+
+Table console_name {
+  console_id integer [not null]
+  name varchar
+  region varchar
+}
+
+Table games {
+  id integer [primary key, increment, unique, not null]
+  console_id integer [not null]
+  franchise varchar
+  developer varchar
+  publisher varchar
+  release_date timestamp
+}
+
+Table game_name {
+  game_id integer [not null]
+  console_id integer
+  name varchar
+  region varchar
+}
+
+Table guides {
+  id integer [primary key, unique, not null]
+  game_id integer
+  author varchar
+  version varchar
+}
+
+Table guide_content {
+  guide_id integer [not null]
+  order integer [increment]
+  text_content varchar
+}
+
+Table cheats {
+  game_id integer [not null]
+  console_id integer
+  text_content varchar
+}
+
+Ref: games.id < guides.game_id
+Ref: consoles.id <> games.console_id
+Ref: consoles.id < console_name.console_id
+Ref: games.id < game_name.game_id
+Ref: games.console_id < game_name.console_id
+Ref: guides.id < guide_content.guide_id
+Ref: games.id < cheats.game_id
+Ref: games.console_id < cheats.console_id

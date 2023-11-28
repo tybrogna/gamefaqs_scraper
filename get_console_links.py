@@ -101,6 +101,7 @@ def run():
             print(ls)
 
     io.append_all_to_pkl(constants.CONSOLE_LINK_LIST_LOC, link_steps)
+    io.append_all_to_pkl(constants.CONSOLE_DL_LIST_LOC, link_steps)
     # fake_list = [("link1", False),("link2", False),("link3", False),("link4", False),("link5", False)]
     # io.append_all_to_pkl(step, fake_list)
     print("  Console Links Saved!!")

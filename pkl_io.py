@@ -1,8 +1,10 @@
 from atomicwrites import atomic_write as atom
 import pickle
 import os
+import sqlite3
 
 DATA_FOLDER = './data/'
+DATABASE_NAME = 'scraper.db'
 override_folder = ''
 
 
@@ -228,6 +230,98 @@ def test_atomic_write():
         write_file.write(bin_dump)
         bin_dump = pickle.dumps(garbo2)
         write_file.write(bin_dump)
-
     test_print_pkl(file_loc)
-    # write_file.close()
+
+
+def create_tables(cursor):
+    """
+    first run, creates tables
+    """
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS consoles (
+            id integer PRIMARY KEY,
+            name text NOT NULL,
+            handheld boolean,
+            family text
+        );
+    """)
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS console_name (
+            console_id integer NOT NULL,
+            name text,
+            region text,
+            FOREIGN KEY (console_id) REFERENCES consoles (id)
+        );
+    """)
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS games (
+            id integer PRIMARY KEY,
+            console_id integer NOT NULL,
+            franchise text,
+            developer text,
+            publisher text,
+            release_date text,
+            FOREIGN KEY (console_id) REFERENCES consoles (id)
+        );
+    """)
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS game_name (
+            game_id integer NOT NULL,
+            console_id integer,
+            name text,
+            region text,
+            FOREIGN KEY (game_id, console_id) REFERENCES games (id, console_id)
+        );
+    """)
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS guides (
+            id integer PRIMARY KEY,
+            game_id integer,
+            author text,
+            version text,
+            FOREIGN KEY (game_id) REFERENCES games (id)
+        );
+    """)
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS guide_content (
+            guide_id integer NOT NULL,
+            count integer,
+            content text,
+            FOREIGN KEY (guide_id) REFERENCES guides (id)
+        );
+    """)
+
+
+def test_add_a_console(cursor):
+    cursor.execute(
+        """
+        INSERT INTO consoles (name, handheld, family) 
+        VALUES ('Nintendo Entertainment System', false, 'Nintendo');
+        """)
+
+    cursor.execute("SELECT * FROM consoles;")
+
+    rows = cursor.fetchall()
+
+    for row in rows:
+        print(row[1])
+
+
+def try_sql():
+    sql_loc = "test.db"
+    sql_loc = __save_in_data(sql_loc)
+    database_connection = sqlite3.connect(sql_loc)
+    cursor = database_connection.cursor()
+    sql.create_tables(cursor)
+    sql.add_a_console(cursor)

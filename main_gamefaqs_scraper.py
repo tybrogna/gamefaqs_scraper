@@ -3,6 +3,7 @@ import copy
 
 import get_console_links
 import get_game_links
+import get_guides
 import pkl_io as io
 import progress_data_structures as ds
 import constants
@@ -28,8 +29,7 @@ steps = [
     ds.Main_Step('get_console_links', get_console_links.run, constants.CONSOLE_LINK_LIST_LOC, False),
     # ds.Main_Step('exclude_console_links', remove_console_link),
     ds.Main_Step('get_game_links', get_game_links.run, constants.GAME_LINK_LIST_LOC, False),
-    ds.Main_Step('save_games_as_dictionary', dummy_func)]
-    # ds.Main_Step('download_guides')]
+    ds.Main_Step('download_guides', get_guides.run)]
 
 
 def create_progress_file():
@@ -47,6 +47,10 @@ def update_progress(step, completion):
     new_step = copy.deepcopy(step)
     new_step.completion = completion
     io.overwrite_in_pkl("progress", step, new_step)
+
+
+def run_db():
+    io.setup()
 
 
 def run():
@@ -70,6 +74,9 @@ def run():
 
 def test():
     print("hello world")
+    get_guides.test_run()
+
+    # io.try_sql()
 
     # a_list = [1,2,3]
     # b_list = [4,5,a_list]
@@ -83,9 +90,10 @@ def test():
     #     print("Creating data folder")
     #     os.makedirs('data')
 
-    # io.test_print_pkl("progress")
+    # io.test_print_pkl("3ds_game_list")
     # io.test_print_pkl(steps[0].save_loc)
 
 
-# test()
-run()
+test()
+# run()
+# run_db()

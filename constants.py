@@ -7,6 +7,8 @@ HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 
 CONSOLE_LINK_LIST_LOC = 'console_link_list'
 GAME_LINK_LIST_LOC = 'console_link_list'
+CONSOLE_DL_LIST_LOC = 'dl_list'
+
 
 URL_gamefaqs = "https://gamefaqs.gamespot.com"
 URL_consoles = "/games/systems"
