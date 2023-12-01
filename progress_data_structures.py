@@ -36,9 +36,9 @@ class File_Step(Save_Name):
     def __eq__(self, other):
         if not isinstance(other, File_Step):
             return NotImplemented
-        return self.name == other.name and \
-            self.save_loc == other.save_loc \
-            and self.link == other.link  # and self.completion == other.completion
+        return self.name == other.name
+            # and self.save_loc == other.save_loc \
+            # and self.link == other.link  # and self.completion == other.completion
 
     def __str__(self):
         return "File Step {0} \n    {1},\n    {2},\n    {3}" \
@@ -54,8 +54,28 @@ class Link_Step(Save_Name):
     def __eq__(self, other):
         if not isinstance(other, Link_Step):
             return NotImplemented
-        return self.name == other.name and self.link == other.link  # and self.completion == other.completion
+        return self.name == other.name \
+        # and self.link == other.link  # and self.completion == other.completion
 
     def __str__(self):
         return "Link Step {0} \n    {1}, {2}" \
             .format(self.name, self.link, "Finished" if self.completion else "Incomplete")
+
+
+class Guide_Data():
+    def __init__(self):
+        self.title = ''
+        self.author = ''
+        self.version = ''
+        self.year = ''
+        self.platform = ''
+        self.starred = False
+        self.link = ''
+
+    def save_title(self):
+        return '{0}{1} - {2} ({3})' \
+            .format('[!] ' if self.starred else '', self.author, self.title, self.platform)
+
+    def __str__(self):
+        return '{0} by {1} for {2}, {3}, {4}' \
+            .format(self.title, self.author, self.platform, self.version, self.year)

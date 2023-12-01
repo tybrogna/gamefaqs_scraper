@@ -1,3 +1,22 @@
+Dec 1 2023
+    get_guides.py filled out
+        create_dl_steps added
+            creates Link_Steps of all the guides associated with a game, downloads them in order
+        get_guide_metadata added
+            scrapes the guide text page for title, author, version, year, and platform
+        get_alias_save_data added
+            molds the game alias into a File_Step to overwrite in the {0}_game_list.pickle files
+        get_guide_text added
+            copies all parts of the guide text html
+        run and test_run added
+            test_run is a single guide download process, run is the real deal
+            RUN NEEDS MORE TESTING
+    Step data structures now only compare their names to see if they're equlivalent
+        these steps are NOT UNIQUE, so this is actually a lie. should update in the future to have some sort of 'shallow equals'
+    Added Guide_Data class
+        holds guide data structure
+
+
 Nov 27 2023
     I started adding a database system.
         its a mess. considering the save point system i made, its a little unnecessary, and i dont have actual access to the gamefaqs database, which means whatever database i have here is going to be a shallow imitation of the real one.
