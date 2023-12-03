@@ -1,3 +1,15 @@
+Dec 3 2023
+    get_guides.py updates
+        run
+            now tries to skip gamespot articles disguised as guides
+        get_alias_save_data
+            now returns a list of aliases, rather than one each time.
+        get_guide_text
+            finally starting the html guides. text guides now _should_ work with all guides
+            css is going to be a strange problem. its saved as a version, a date, and a time. 
+    progress_data_structures.py
+        save_new_completion added, shortcut for updating _Steps data structures to True
+
 Dec 1 2023
     get_guides.py filled out
         create_dl_steps added

@@ -1,8 +1,15 @@
+import copy
 
 
 class Save_Name:
     def __init__(self, name):
         self.name = name
+        self.completion = False
+
+    def save_new_completion(self, completion_val=True):
+        ret_val = copy.deepcopy(self)
+        ret_val.completion = completion_val
+        return ret_val
 
 
 class Main_Step(Save_Name):

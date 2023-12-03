@@ -74,7 +74,7 @@ def run():
 
 def test():
     print("hello world")
-    get_guides.test_run()
+    get_guides.test_link()
 
     # io.try_sql()
 

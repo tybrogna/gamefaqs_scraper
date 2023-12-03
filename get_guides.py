@@ -3,7 +3,6 @@ import copy
 import pkl_io as io
 import constants
 import progress_data_structures as ds
-from bs4 import Tag
 
 
 def create_console_steps(consoles_loc):
@@ -56,30 +55,33 @@ def get_game_aliases(page_soup):
     return alias_url_list
 
 
-def get_alias_save_data(alias):
-    alias_no_slash = alias[1:]
-    alias_console = alias_no_slash[:alias_no_slash.index('/')]
-    alias_link = alias_no_slash[alias_no_slash.index('/') + 1:]
-    print(alias_console)
-    alias_game_id = alias_no_slash[alias_no_slash.index('/') + 1:alias_no_slash.index('-')]
-    id_found = io.pkl_contains_name('{0}_game_list'.format(alias_console), alias_game_id)
-    if id_found:
-        old_step = ds.Link_Step(alias_game_id, alias_link, False)
-        new_step = ds.Link_Step(alias_game_id, alias_link, True)
-        alias_save_data = ['{0}_game_list'.format(alias_console), old_step, new_step]
-        return alias_save_data
-    return None
+def get_alias_save_data(alias_URL_list):
+    alias_SD_list = []
+    for alias in alias_URL_list:
+        # alias_sd = get_alias_save_data(alias)
+        alias_no_slash = alias[1:]
+        alias_console = alias_no_slash[:alias_no_slash.index('/')]
+        alias_link = alias_no_slash[alias_no_slash.index('/') + 1:]
+        print(alias_console)
+        alias_game_id = alias_no_slash[alias_no_slash.index('/') + 1:alias_no_slash.index('-')]
+        id_found = io.pkl_contains_name('{0}_game_list'.format(alias_console), alias_game_id)
+        if id_found:
+            old_step = ds.Link_Step(alias_game_id, alias_link, False)
+            new_step = ds.Link_Step(alias_game_id, alias_link, True)
+            alias_save_data = ['{0}_game_list'.format(alias_console), old_step, new_step]
+            alias_SD_list.append(alias_save_data)
+    return alias_SD_list
 
 
 def get_guide_text(page_soup):
     guide_text = page_soup.select('#faqtext pre')
-    if len(guide_text) > 1:
+    if guide_text is not None:
         guide_text_list = []
         for gt in guide_text:
             guide_text_list.append(guide_text.contents)
         return guide_text_list
     else:
-        return guide_text.contents[0]
+        toc_link_list = page_soup.select('#faqwrap .ftoc a')
 
 
 def create_dl_steps(game_id, guide_links):
@@ -149,6 +151,18 @@ def run():
             for guide in guide_dl_steps:
                 guide_url = constants.URL_gamefaqs + guide.link
                 guide_soup = constants.heat_soup(guide_url)
+                is_guide = guide_soup.select_one('div.ffaq') is not None
+                if not is_guide:
+                    guide_progress_SD = [game.name, guide, guide.save_new_completion()]
+                    constants.force_save(guide_progress_SD)
+                    continue
                 guide_metadata = get_guide_metadata(guide_soup)
                 guide_text = get_guide_text(guide_soup)
                 guide_SD = [guide_metadata.save_title(), guide_text]
+                alias_SD_list = get_alias_save_data(alias_URL_list)
+                # for alias in alias_URL_list:
+                #     alias_sd = get_alias_save_data(alias)
+                #     if alias_sd is not None:
+                #         alias_SD_list.append(alias_sd)
+                guide_progress_SD = [game.name, guide, guide.save_new_completion()]
+                constants.force_save(guide_SD, guide_progress_SD, *alias_SD_list)
