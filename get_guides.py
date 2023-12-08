@@ -3,6 +3,8 @@ import copy
 import pkl_io as io
 import constants
 import progress_data_structures as ds
+from bs4 import NavigableString
+from bs4 import BeautifulSoup
 
 
 def create_console_steps(consoles_loc):
@@ -44,6 +46,8 @@ def get_guide_metadata(page_soup):
     guide_metadata.year = ver_and_date[ver_and_date.rindex('/') + 1:]
     if not page_soup.select_one('i.fa-star') is None:
         guide_metadata.starred = True
+    if page_soup.select_one('#faqwrap .ftoc a') is not None:
+        guide_metadata.html = True
     return guide_metadata
 
 
@@ -79,9 +83,38 @@ def get_guide_text(page_soup):
         guide_text_list = []
         for gt in guide_text:
             guide_text_list.append(guide_text.contents)
-        return guide_text_list
-    else:
-        toc_link_list = page_soup.select('#faqwrap .ftoc a')
+    return guide_text_list
+
+
+def get_guide_html(page_soup, base_url):
+    guide_html_list = []
+    toc_link_list = page_soup.select('#faqwrap .ftoc a')
+    page_content = page_soup.select_one('#faqwrap')
+    html_strs = []
+    html_strs.append('!<DOCTYPE html>')
+    html_strs.append('<link id="core_css" href="./temp_files/thecss.css" rel="stylesheet" type="text/css">')
+    html_strs.append('<div class="container">')
+    html_strs.append('<div id="faqwrap" class="ffaq ffaqbody">')
+    html_strs.append(page_content)
+    html_strs.append('</div')
+    html_strs.append('</div>')
+    page_title = toc_link_list[0]
+    guide_html_list.append([page_title, html_strs])
+    for toc_name in toc_link_list[1:]:
+        page_url = base_url + '/' + toc_name
+        page_soup = constants.heat_soup(page_url)
+        page_content = page_soup.select_one('#faqwrap')
+        html_strs = []
+        html_strs.append('!<DOCTYPE html>')
+        html_strs.append('<link id="core_css" href="./temp_files/thecss.css" rel="stylesheet" type="text/css">')
+        html_strs.append('<div class="container">')
+        html_strs.append('<div id="faqwrap" class="ffaq ffaqbody">')
+        html_strs.append(page_content)
+        html_strs.append('</div')
+        html_strs.append('</div>')
+        guide_html_list.append([toc_name, html_strs])
+    return guide_html_list
+
 
 
 def create_dl_steps(game_id, guide_links):
@@ -95,6 +128,34 @@ def create_dl_steps(game_id, guide_links):
     io.append_all_to_pkl(game_id, guide_dl_steps)
     return guide_dl_steps
 
+
+def test_link():
+    tg = open('./temp_files/tg.htm', 'r')
+    soup = BeautifulSoup(tg, "html.parser")
+    # soup = constants.heat_soup('https://gamefaqs.gamespot.com/ps4/200179-red-dead-redemption-2/faqs/76594')
+    whatiwant = soup.select_one('#faqwrap')
+    # print(whatiwant)
+    html_strs = []
+    html_strs.append('!<DOCTYPE html>')
+    html_strs.append('<link id="core_css" href="./temp_files/thecss.css" rel="stylesheet" type="text/css">')
+    html_strs.append('<div class="container">')
+    html_strs.append('<div id="faqwrap" class="ffaq ffaqbody">')
+    html_strs.extend(whatiwant.children)
+    html_strs.append('</div')
+    html_strs.append('</div>')
+    io.save_html('temp_files/here.html', html_strs)
+    # for c in whatiwant.descendants:
+    #     print(str(c))
+        # if isinstance(c, NavigableString):
+        #     print(c)
+        # else:
+        #     if c.select_one('img') is not None:
+        #         print(c.select_one('img')['src'])
+    tg.close()
+    # con = whatiwant.children[0]
+    # print(con)
+    # for ch in con.descendants:
+    #     print(ch)
 
 def test_run():
     console_test = create_console_steps(constants.CONSOLE_LINK_LIST_LOC)[0]
@@ -157,12 +218,19 @@ def run():
                     constants.force_save(guide_progress_SD)
                     continue
                 guide_metadata = get_guide_metadata(guide_soup)
-                guide_text = get_guide_text(guide_soup)
-                guide_SD = [guide_metadata.save_title(), guide_text]
-                alias_SD_list = get_alias_save_data(alias_URL_list)
-                # for alias in alias_URL_list:
-                #     alias_sd = get_alias_save_data(alias)
-                #     if alias_sd is not None:
-                #         alias_SD_list.append(alias_sd)
-                guide_progress_SD = [game.name, guide, guide.save_new_completion()]
-                constants.force_save(guide_SD, guide_progress_SD, *alias_SD_list)
+                if guide_metadata.html:
+                    guide_html_list = get_guide_html(guide_soup, guide_url)
+                    folder_title = guide_metadata.save_title()
+                    for guide_html in guide_html_list:
+                        guide_html[0] = folder_title + '/' + guide_html[0]
+                    
+                else:
+                    guide_text = get_guide_text(guide_soup)
+                    guide_SD = [guide_metadata.save_title(), guide_text]
+                    alias_SD_list = get_alias_save_data(alias_URL_list)
+                    # for alias in alias_URL_list:
+                    #     alias_sd = get_alias_save_data(alias)
+                    #     if alias_sd is not None:
+                    #         alias_SD_list.append(alias_sd)
+                    guide_progress_SD = [game.name, guide, guide.save_new_completion()]
+                    constants.force_save(guide_SD, guide_progress_SD, *alias_SD_list)

@@ -206,6 +206,15 @@ def delete_pkl(file_loc):
     return True
 
 
+def save_html(file_loc, bs_obj):
+    if not exists(file_loc):
+        create_file(file_loc)
+    with atom(file_loc, mode='w', overwrite=True) as write_file:
+        for bs in bs_obj:
+            write_file.write(str(bs))
+
+
+
 def test_print_pkl(file_loc):
     file_loc = __becomes_pickle(file_loc)
     file_loc = __save_in_data(file_loc)

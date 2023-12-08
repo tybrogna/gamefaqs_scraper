@@ -2,6 +2,7 @@ import requests
 import pkl_io as io
 from bs4 import BeautifulSoup
 import time
+from progress_data_structures import Save_Data
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'}
 
@@ -29,6 +30,43 @@ def heat_soup(url):
     req = requests.get(url, headers=HEADERS)
     print(str(req.status_code) + " from " + url)
     return BeautifulSoup(req.text, "html.parser")
+
+
+def force_save_pack(*save_pack: Save_Data):
+    done = []
+    interrupt_count = 0
+    saves_count = 0
+
+    for save in save_pack:
+        if type(save.blob) is int:
+            save.blob = str(save.blob)
+        if type(save.old_blob_for_overwrite) is int:
+            save.old_blob_for_overwrite = str(save.old_blob_for_overwrite)
+
+    while not all_done:
+        try:
+            time.sleep(.3)
+            save = save_pack[saves_count]
+            if save.overwrite_blob is not None:
+                done[saves_count] = io.overwrite_in_pkl(save.file_loc, save.old_blob_for_overwrite, save.blob)
+            else:
+                if save.isPickle:
+                    done[saves_count] = io.append_all_to_pkl(save.file_loc, save.blob)
+                else:
+                    done[saves_count] = io.save_html(save.file_loc, save.blob)
+            saves_count = saves_count + 1
+            all_done = True
+            for d in done:
+                all_done = all_done and d
+        except KeyboardInterrupt:
+            if interrupt_count <= 2:
+                print('SAVING PROGRESS, DON\'T INTERRUPT')
+                interrupt_count = interrupt_count + 1
+                continue
+            else:
+                print('Ok fine jeez you got it chief')
+                all_done = True
+
 
 
 def force_save(*loc_data):

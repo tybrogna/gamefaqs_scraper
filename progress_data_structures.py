@@ -78,6 +78,7 @@ class Guide_Data():
         self.platform = ''
         self.starred = False
         self.link = ''
+        self.html = False
 
     def save_title(self):
         return '{0}{1} - {2} ({3})' \
@@ -86,3 +87,12 @@ class Guide_Data():
     def __str__(self):
         return '{0} by {1} for {2}, {3}, {4}' \
             .format(self.title, self.author, self.platform, self.version, self.year)
+
+class Save_Data():
+    def __init__(self):
+        self.file_loc = ''
+        self.isPickle = True
+        self.blob = None
+        self.old_blob_for_overwrite = None
+        self.isPickle = False
+        self.__done = False
