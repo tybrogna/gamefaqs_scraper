@@ -70,10 +70,12 @@ def get_alias_save_data(alias_URL_list):
         alias_game_id = alias_no_slash[alias_no_slash.index('/') + 1:alias_no_slash.index('-')]
         id_found = io.pkl_contains_name('{0}_game_list'.format(alias_console), alias_game_id)
         if id_found:
+            file_loc = '{0}_game_list'.format(alias_console)
             old_step = ds.Link_Step(alias_game_id, alias_link, False)
             new_step = ds.Link_Step(alias_game_id, alias_link, True)
-            alias_save_data = ['{0}_game_list'.format(alias_console), old_step, new_step]
-            alias_SD_list.append(alias_save_data)
+            # alias_save_data = ['{0}_game_list'.format(alias_console), old_step, new_step]
+            alias_SD = ds.Save_Data(file_loc, new_step, old_step, True)
+            alias_SD_list.append(alias_SD)
     return alias_SD_list
 
 
@@ -83,7 +85,9 @@ def get_guide_text(page_soup):
         guide_text_list = []
         for gt in guide_text:
             guide_text_list.append(guide_text.contents)
-    return guide_text_list
+    new_save = ds.Save_Data()
+    new_save.blob = guide_text_list
+    return new_save
 
 
 def get_guide_html(page_soup, base_url):
@@ -99,7 +103,8 @@ def get_guide_html(page_soup, base_url):
     html_strs.append('</div')
     html_strs.append('</div>')
     page_title = toc_link_list[0]
-    guide_html_list.append([page_title, html_strs])
+    new_save = ds.Save_Data(page_title, html_strs)
+    guide_html_list.append(new_save)
     for toc_name in toc_link_list[1:]:
         page_url = base_url + '/' + toc_name
         page_soup = constants.heat_soup(page_url)
@@ -112,12 +117,12 @@ def get_guide_html(page_soup, base_url):
         html_strs.append(page_content)
         html_strs.append('</div')
         html_strs.append('</div>')
-        guide_html_list.append([toc_name, html_strs])
+        new_save = ds.Save_Data(toc_name, html_strs)
+        guide_html_list.append(new_save)
     return guide_html_list
 
 
-
-def create_dl_steps(game_id, guide_links):
+def create_dl_steps(game_id, guide_links) -> list[ds.Link_Step]:
     if io.exists(game_id):
         return io.unpickle(game_id)
     guide_dl_steps = []
@@ -214,23 +219,30 @@ def run():
                 guide_soup = constants.heat_soup(guide_url)
                 is_guide = guide_soup.select_one('div.ffaq') is not None
                 if not is_guide:
-                    guide_progress_SD = [game.name, guide, guide.save_new_completion()]
-                    constants.force_save(guide_progress_SD)
+                    guide_progress_SD = ds.Save_Data(game.name, guide.save_new_completion(), guide, True)
+                    # guide_progress_SD = [game.name, guide, guide.save_new_completion()]
+                    constants.force_save_pack(guide_progress_SD)
                     continue
                 guide_metadata = get_guide_metadata(guide_soup)
+                alias_SD_list = get_alias_save_data(alias_URL_list)
+                guide_progress_SD = ds.Save_Data(game.name, guide.save_new_completion(), guide, True)
+                # guide_progress_SD = [game.name, guide, guide.save_new_completion()]
                 if guide_metadata.html:
                     guide_html_list = get_guide_html(guide_soup, guide_url)
                     folder_title = guide_metadata.save_title()
                     for guide_html in guide_html_list:
                         guide_html[0] = folder_title + '/' + guide_html[0]
-                    
+                    constants.force_save_pack(*guide_html_list, guide_progress_SD, *alias_SD_list)
                 else:
-                    guide_text = get_guide_text(guide_soup)
-                    guide_SD = [guide_metadata.save_title(), guide_text]
-                    alias_SD_list = get_alias_save_data(alias_URL_list)
-                    # for alias in alias_URL_list:
-                    #     alias_sd = get_alias_save_data(alias)
-                    #     if alias_sd is not None:
-                    #         alias_SD_list.append(alias_sd)
+                    guide_SD = get_guide_text(guide_soup)
+                    guide_SD.file_loc = guide_metadata.save_title()
+                    guide_progress_SD = ds.Save_Data(game.name)
+                    guide_progress_SD.blob = guide.save_new_completion()
+                    guide_progress_SD.old_blob_for_overwrite = guide
                     guide_progress_SD = [game.name, guide, guide.save_new_completion()]
-                    constants.force_save(guide_SD, guide_progress_SD, *alias_SD_list)
+                    constants.force_save_pack(guide_SD, guide_progress_SD, *alias_SD_list)
+
+                    # guide_text = get_guide_text(guide_soup)
+                    # guide_SD = [guide_metadata.save_title(), guide_text]
+                    # guide_progress_SD = [game.name, guide, guide.save_new_completion()]
+                    # constants.force_save(guide_SD, guide_progress_SD, *alias_SD_list)

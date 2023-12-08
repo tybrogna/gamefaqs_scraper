@@ -89,10 +89,9 @@ class Guide_Data():
             .format(self.title, self.author, self.platform, self.version, self.year)
 
 class Save_Data():
-    def __init__(self):
-        self.file_loc = ''
-        self.isPickle = True
-        self.blob = None
-        self.old_blob_for_overwrite = None
-        self.isPickle = False
+    def __init__(self, file_loc = '', blob = None, old_blob = None, isPickle=False):
+        self.file_loc = file_loc
+        self.isPickle = isPickle
+        self.blob = blob
+        self.old_blob_for_overwrite = old_blob
         self.__done = False

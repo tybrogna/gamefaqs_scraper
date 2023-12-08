@@ -1,3 +1,4 @@
+import _thread
 import requests
 import pkl_io as io
 from bs4 import BeautifulSoup
@@ -20,7 +21,7 @@ URL_faqs = "/faqs"
 CONSOLE_EXCLUDE = ['ps2', 'gc', 'xbox', 'game_boy']
 
 
-def heat_soup(url):
+def heat_soup(url) -> BeautifulSoup: 
     """
     makes a web request of the paramter url, then creates a soup object
 
@@ -34,6 +35,7 @@ def heat_soup(url):
 
 def force_save_pack(*save_pack: Save_Data):
     done = []
+    queue_interrupt = False
     interrupt_count = 0
     saves_count = 0
 
@@ -47,26 +49,31 @@ def force_save_pack(*save_pack: Save_Data):
         try:
             time.sleep(.3)
             save = save_pack[saves_count]
-            if save.overwrite_blob is not None:
-                done[saves_count] = io.overwrite_in_pkl(save.file_loc, save.old_blob_for_overwrite, save.blob)
-            else:
-                if save.isPickle:
-                    done[saves_count] = io.append_all_to_pkl(save.file_loc, save.blob)
+            if save.isPickle:
+                if save.old_blob_for_overwrite is not None:
+                    done[saves_count] = io.overwrite_in_pkl(save.file_loc, save.old_blob_for_overwrite, save.blob)
                 else:
-                    done[saves_count] = io.save_html(save.file_loc, save.blob)
+                    done[saves_count] = io.append_all_to_pkl(save.file_loc, save.blob)
+            else:
+                done[saves_count] = io.save_html(save.file_loc, save.blob)
             saves_count = saves_count + 1
             all_done = True
             for d in done:
                 all_done = all_done and d
         except KeyboardInterrupt:
-            if interrupt_count <= 2:
+            interrupt_count = interrupt_count + 1
+            if interrupt_count == 1:
+                print('Stopping, please wait...')
+                queue_interrupt = True
+                continue
+            if interrupt_count <= 3:
                 print('SAVING PROGRESS, DON\'T INTERRUPT')
-                interrupt_count = interrupt_count + 1
                 continue
             else:
                 print('Ok fine jeez you got it chief')
                 all_done = True
-
+    if queue_interrupt:
+        _thread.interrupt_main()
 
 
 def force_save(*loc_data):
