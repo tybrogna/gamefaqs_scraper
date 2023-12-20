@@ -4,12 +4,12 @@ import copy
 import get_console_links
 import get_game_links
 import get_guides
-import pkl_io as io
+import scraper_io as io
 import progress_data_structures as ds
 import constants
 
 exp_link_check = "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)"
-
+override_folder_loc = ''
 
 def dummy_func(arg):
     print('im dum')
@@ -22,7 +22,7 @@ def remove_console_link():
         if saved_name:
             finish_step = saved_name.deepcopy()
             finish_step.completion = True
-            io.overwrite_in_pkl(constants.CONSOLE_LINK_LIST_LOC, saved_name, finish_step)
+            io.pkl_overwrite(constants.CONSOLE_LINK_LIST_LOC, saved_name, finish_step)
 
 
 steps = [
@@ -33,9 +33,9 @@ steps = [
 
 
 def create_progress_file():
-    if io.create_file("progress"):
+    if not io.pkl_exists("progress"):
         for step in steps:
-            io.append_to_pkl("progress", step)
+            io.pkl_append("progress", step)
 
 
 def check_progress(step_name):
@@ -46,15 +46,15 @@ def check_progress(step_name):
 def update_progress(step, completion):
     new_step = copy.deepcopy(step)
     new_step.completion = completion
-    io.overwrite_in_pkl("progress", step, new_step)
+    io.pkl_overwrite("progress", step, new_step)
 
 
 def run_db():
-    io.setup()
+    io.setup('ha')
 
 
 def run():
-    io.setup()
+    io.setup(override_folder_loc)
     create_progress_file()
     for step in steps:
         step_complete = check_progress(step.name)
@@ -74,7 +74,8 @@ def run():
 
 def test():
     print("hello world")
-    get_guides.test_link()
+    io.setup()
+    get_guides.good_shit()
 
     # io.try_sql()
 

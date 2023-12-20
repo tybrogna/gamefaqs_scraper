@@ -1,23 +1,11 @@
 from bs4 import BeautifulSoup
 import requests
 
-import pkl_io as io
+import scraper_io as io
 import constants
 import progress_data_structures as ds
 
 test = True
-
-
-def heat_soup(url):
-    """
-    makes a web request of the paramter url, then creates a soup object
-
-    :param url: string url of webpage
-    :return: BeautifulSoup html object
-    """
-    req = requests.get(url, headers=constants.HEADERS)
-    print(str(req.status_code) + " from " + url)
-    return BeautifulSoup(req.text, "html.parser")
 
 
 def get_console_locations_list(soup_consoles):
@@ -48,9 +36,9 @@ def get_console_locations_list(soup_consoles):
 
 
 def verify_games_on_page(console_link):
-    console_soup = heat_soup(console_link)
-    gamelist = console_soup.find_all('td', class_='rtitle')
-    if len(gamelist) == 0:
+    console_soup = constants.heat_soup(console_link)
+    game_list = console_soup.find_all('td', class_='rtitle')
+    if len(game_list) == 0:
         return False
     else:
         return True
@@ -75,7 +63,7 @@ def get_locations_from_confirmed_link(confirmed_link):
 
 def run():
     print("  Scanning all consoles on gamefaqs...")
-    soup_consoles = heat_soup(constants.URL_gamefaqs + constants.URL_consoles)
+    soup_consoles = constants.heat_soup(constants.URL_gamefaqs + constants.URL_consoles)
     console_page_all_locations = get_console_locations_list(soup_consoles)
 
     if test:
@@ -100,8 +88,8 @@ def run():
         for ls in link_steps:
             print(ls)
 
-    io.append_all_to_pkl(constants.CONSOLE_LINK_LIST_LOC, link_steps)
-    io.append_all_to_pkl(constants.CONSOLE_DL_LIST_LOC, link_steps)
+    io.pkl_append_all(constants.CONSOLE_LINK_LIST_LOC, link_steps)
+    io.pkl_append_all(constants.CONSOLE_DL_LIST_LOC, link_steps)
     # fake_list = [("link1", False),("link2", False),("link3", False),("link4", False),("link5", False)]
     # io.append_all_to_pkl(step, fake_list)
     print("  Console Links Saved!!")

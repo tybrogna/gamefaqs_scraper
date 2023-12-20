@@ -3,7 +3,7 @@ import requests
 import os
 import time
 
-import pkl_io as io
+import scraper_io as io
 import constants
 import progress_data_structures as ds
 
@@ -23,13 +23,13 @@ def create_file_steps(console_links_file):
 
 def create_console_progress_files(step_name, console_save_loc):
     page_search_save_file = step_name + "_page_at"
-    if not io.exists(page_search_save_file):
-        io.append_to_pkl(page_search_save_file, '0')
+    if not io.pkl_exists(page_search_save_file):
+        io.pkl_append(page_search_save_file, '0')
 
     first_game_save = console_save_loc
-    if not io.exists(first_game_save):
+    if not io.pkl_exists(first_game_save):
         print("  No Game Link Progress file found, creating Game Link Progress file")
-        io.create_file(first_game_save)
+        io.pkl_create_file(first_game_save)
 
 
 def create_page_url(console_name, pg_at):
@@ -72,15 +72,15 @@ def run():
                 print("get_game_links - resuming on page {0}, at {1}".format(page_at, url_pg))
                 if int(page_at) > 1:
                     finished_step = ds.File_Step(console_step.name, console_step.link, console_step.save_loc, True)
-                    io.overwrite_in_pkl(constants.CONSOLE_LINK_LIST_LOC, console_step, finished_step)
-                    io.test_print_pkl(constants.CONSOLE_LINK_LIST_LOC)
+                    io.pkl_overwrite(constants.CONSOLE_LINK_LIST_LOC, console_step, finished_step)
+                    io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
 
             html_soup = constants.heat_soup(url_pg)
             if not page_contains_games(html_soup):
-                io.delete_pkl(page_file_loc)
+                io.pkl_delete(page_file_loc)
                 finished_step = ds.File_Step(console_step.name, console_step.link, console_step.save_loc, True)
                 # this needs to be forced
-                io.overwrite_in_pkl(constants.CONSOLE_LINK_LIST_LOC, console_step, finished_step)
+                io.pkl_overwrite(constants.CONSOLE_LINK_LIST_LOC, console_step, finished_step)
                 # nothing found in the table body, break
                 break
 

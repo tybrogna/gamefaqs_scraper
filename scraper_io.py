@@ -3,9 +3,31 @@ import pickle
 import os
 import sqlite3
 
-DATA_FOLDER = './data/'
+import constants
+
+DATA_FOLDER = './temp_files/'
 DATABASE_NAME = 'scraper.db'
+CSS_LOC = 'web_files/'
 override_folder = ''
+
+
+def setup(override_loc=''):
+    global override_folder
+    override_folder = override_loc
+    if not override_folder == '' and not override_folder.endswith('/'):
+        override_folder = override_folder + '/'
+    if not os.path.exists(DATA_FOLDER):
+        os.makedirs(DATA_FOLDER)
+        print('data folder created')
+    if not os.path.exists(DATA_FOLDER + CSS_LOC):
+        os.makedirs(DATA_FOLDER + CSS_LOC)
+
+
+def __create_folder(folder_loc):
+    if not os.path.exists(folder_loc):
+        os.makedirs(folder_loc)
+        return True
+    return False
 
 
 def __save_in_data(file_loc):
@@ -13,6 +35,7 @@ def __save_in_data(file_loc):
         file_loc = override_folder + file_loc
     elif not file_loc.startswith(DATA_FOLDER):
         file_loc = DATA_FOLDER + file_loc
+    __create_folder(constants.text_before_last_slash(file_loc))
     return file_loc
 
 
@@ -22,25 +45,7 @@ def __becomes_pickle(file_loc):
     return file_loc
 
 
-def setup():
-    global override_folder
-    if not override_folder == '' and not override_folder.endswith('/'):
-        override_folder = override_folder + '/'
-    if not os.path.exists(DATA_FOLDER):
-        os.makedirs(DATA_FOLDER)
-        print('data folder created')
-
-
-def exists(file_loc):
-    file_loc = __becomes_pickle(file_loc)
-    file_loc = __save_in_data(file_loc)
-    if not os.path.exists(file_loc):
-        return False
-    return True
-
-
 def create_file(file_loc):
-    file_loc = __becomes_pickle(file_loc)
     file_loc = __save_in_data(file_loc)
     if not os.path.exists(file_loc) or os.stat(file_loc).st_size == 0:
         open(file_loc, 'w').close()
@@ -48,15 +53,36 @@ def create_file(file_loc):
     return False
 
 
-def create_folder(folder_loc):
-    folder_loc = __save_in_data(folder_loc)
-    if not os.path.exists(folder_loc):
-        os.makedirs(folder_loc)
-        return True
-    return False
+def create_pkl(file_loc):
+    file_loc = __becomes_pickle(file_loc)
+    return create_file(file_loc)
 
 
-def overwrite_in_pkl(file_loc, old_data, new_data):
+def exists(file_loc):
+    file_loc = __save_in_data(file_loc)
+    if not os.path.exists(file_loc):
+        return False
+    return True
+
+
+def pkl_exists(file_loc):
+    file_loc = __becomes_pickle(file_loc)
+    return exists(file_loc)
+
+
+def pkl_create_file(file_loc):
+    file_loc = __becomes_pickle(file_loc)
+    return create_file(file_loc)
+
+
+def __atomize(file_loc, file_data):
+    with atom(file_loc, mode='wb', overwrite=True) as write_file:
+        for data in file_data:
+            bin_data = pickle.dumps(data)
+            write_file.write(bin_data)
+
+
+def pkl_overwrite(file_loc, old_data, new_data):
     """
     replaces old_data with new_data in a pickle at file_loc
 
@@ -79,19 +105,17 @@ def overwrite_in_pkl(file_loc, old_data, new_data):
             break
     read_file.close()
 
-    with atom(file_loc, mode='wb', overwrite=True) as write_file:
-        for data in file_data:
-            bin_data = pickle.dumps(data)
-            write_file.write(bin_data)
+    __atomize(file_loc, file_data)
     return True
 
-    # write_file = open(file_loc, 'wb+')
-    # for data in file_data:
-    #     pickle.dump(data, write_file)
-    # write_file.close()
+    # with atom(file_loc, mode='wb', overwrite=True) as write_file:
+    #     for data in file_data:
+    #         bin_data = pickle.dumps(data)
+    #         write_file.write(bin_data)
+    # return True
 
 
-def append_all_to_pkl(file_loc, data_array):
+def pkl_append_all(file_loc, data_array):
     """
     appends all data in the list to the end of a file. i feel like i wrote this wrong, but eh
 
@@ -109,25 +133,21 @@ def append_all_to_pkl(file_loc, data_array):
         except EOFError:
             break
     read_file.close()
-
-    with atom(file_loc, mode='wb', overwrite=True) as write_file:
-        for data in file_data:
-            bin_data = pickle.dumps(data)
-            write_file.write(bin_data)
-        for data in data_array:
-            bin_data = pickle.dumps(data)
-            write_file.write(bin_data)
-
-    # write_file = open(file_loc, "wb+")
-    # for data in file_data:
-    #     pickle.dump(data, write_file)
-    # for data in data_array:
-    #     pickle.dump(data, write_file)
-    # write_file.close()
+    file_data.extend(data_array)
+    __atomize(file_loc, file_data)
     return True
 
+    # with atom(file_loc, mode='wb', overwrite=True) as write_file:
+    #     for data in file_data:
+    #         bin_data = pickle.dumps(data)
+    #         write_file.write(bin_data)
+    #     for data in data_array:
+    #         bin_data = pickle.dumps(data)
+    #         write_file.write(bin_data)
+    # return True
 
-def append_to_pkl(file_loc, new_data):
+
+def pkl_append(file_loc, new_data):
     """
     appends data to the end of a file. i feel like i wrote this wrong, but eh
 
@@ -145,19 +165,17 @@ def append_to_pkl(file_loc, new_data):
         except EOFError:
             break
     read_file.close()
-
-    with atom(file_loc, mode='wb', overwrite=True) as write_file:
-        for data in file_data:
-            bin_data = pickle.dumps(data)
-            write_file.write(bin_data)
-        bin_data = pickle.dumps(new_data)
-        write_file.write(bin_data)
+    file_data.append(new_data)
+    __atomize(file_loc, file_data)
     return True
-    # write_file = open(file_loc, "wb+")
-    # for data in file_data:
-    #     pickle.dump(data, write_file)
-    # pickle.dump(new_data, write_file)
-    # write_file.close()
+
+    # with atom(file_loc, mode='wb', overwrite=True) as write_file:
+    #     for data in file_data:
+    #         bin_data = pickle.dumps(data)
+    #         write_file.write(bin_data)
+    #     bin_data = pickle.dumps(new_data)
+    #     write_file.write(bin_data)
+    # return True
 
 
 def pkl_contains_name(file_loc, name):
@@ -166,7 +184,7 @@ def pkl_contains_name(file_loc, name):
 
     :param file_loc: filepath string location of pickle to read
     :param name: name to find
-    :return: object with the corrent name if found, else none
+    :return: object with the correct name if found, else none
     """
     file_loc = __becomes_pickle(file_loc)
     file_loc = __save_in_data(file_loc)
@@ -197,8 +215,7 @@ def unpickle(file_loc):
     return file_data
 
 
-def delete_pkl(file_loc):
-    file_loc = __becomes_pickle(file_loc)
+def delete(file_loc):
     file_loc = __save_in_data(file_loc)
     if not os.path.exists(file_loc):
         return False
@@ -206,16 +223,49 @@ def delete_pkl(file_loc):
     return True
 
 
-def save_html(file_loc, bs_obj):
+def pkl_delete(file_loc):
+    file_loc = __becomes_pickle(file_loc)
+    return delete(file_loc)
+
+
+def save_text(file_loc, write_obj):
+    file_loc = __save_in_data(file_loc)
     if not exists(file_loc):
         create_file(file_loc)
     with atom(file_loc, mode='w', overwrite=True) as write_file:
-        for bs in bs_obj:
+        for bs in write_obj:
             write_file.write(str(bs))
+    return True
 
 
+def save_img(img_loc, img):
+    img_loc = __save_in_data(img_loc)
+    if not exists(img_loc):
+        if not os.path.exists(img_loc) or os.stat(img_loc).st_size == 0:
+            open(img_loc, 'wb').close()
+    with atom(img_loc, mode='wb', overwrite=True) as write_file:
+        for chunk in img:
+            write_file.write(chunk)
+    return True
 
-def test_print_pkl(file_loc):
+
+def css_exists(css_file_name):
+    if not css_file_name.startswith(CSS_LOC):
+        css_file_name = CSS_LOC + css_file_name
+    return exists(css_file_name)
+
+
+def save_css(css_loc: str, css):
+    if not css_loc.startswith(CSS_LOC):
+        css_loc = CSS_LOC + css_loc
+    css_loc = __save_in_data(css_loc)
+    create_file(css_loc)
+    with atom(css_loc, mode='w', encoding='utf-8', overwrite=True) as write_file:
+        write_file.write(css)
+    return True
+
+
+def pkl_test_print(file_loc):
     file_loc = __becomes_pickle(file_loc)
     file_loc = __save_in_data(file_loc)
     with open(file_loc, "rb+") as pickin:
@@ -232,14 +282,14 @@ def test_atomic_write():
     file_loc = "test"
     file_loc = __becomes_pickle(file_loc)
     file_loc = __save_in_data(file_loc)
-    garbo1 = ["hey","yeah","no"]
-    garbo2 = {'dum':1,'uesless':"two"}
+    garbo1 = ["hey", "yeah", "no"]
+    garbo2 = {'dum': 1,'uesless': "two"}
     with atom(file_loc, mode='wb', overwrite=True) as write_file:
         bin_dump = pickle.dumps(garbo1)
         write_file.write(bin_dump)
         bin_dump = pickle.dumps(garbo2)
         write_file.write(bin_dump)
-    test_print_pkl(file_loc)
+    pkl_test_print(file_loc)
 
 
 def create_tables(cursor):
@@ -332,5 +382,5 @@ def try_sql():
     sql_loc = __save_in_data(sql_loc)
     database_connection = sqlite3.connect(sql_loc)
     cursor = database_connection.cursor()
-    sql.create_tables(cursor)
-    sql.add_a_console(cursor)
+    # sql.create_tables(cursor)
+    # sql.add_a_console(cursor)

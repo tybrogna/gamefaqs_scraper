@@ -1,6 +1,6 @@
 import _thread
 import requests
-import pkl_io as io
+import scraper_io as io
 from bs4 import BeautifulSoup
 import time
 from progress_data_structures import Save_Data
@@ -10,6 +10,7 @@ HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 CONSOLE_LINK_LIST_LOC = 'console_link_list'
 GAME_LINK_LIST_LOC = 'console_link_list'
 CONSOLE_DL_LIST_LOC = 'dl_list'
+DL_IMAGES = True
 
 
 URL_gamefaqs = "https://gamefaqs.gamespot.com"
@@ -17,6 +18,7 @@ URL_consoles = "/games/systems"
 URL_list = "/category/999-all"
 URL_page = "?page="
 URL_faqs = "/faqs"
+URL_css = '/a/css'
 
 CONSOLE_EXCLUDE = ['ps2', 'gc', 'xbox', 'game_boy']
 
@@ -33,8 +35,22 @@ def heat_soup(url) -> BeautifulSoup:
     return BeautifulSoup(req.text, "html.parser")
 
 
+def url_request_blob(url: str) -> requests.Response:
+    req = requests.get(url, headers=HEADERS, stream=True)
+    print(str(req.status_code) + " from " + url)
+    return req
+
+
+def text_before_last_slash(text: str) -> str:
+    return text[:text.rindex('/')]
+
+
+def text_after_last_slash(text: str) -> str:
+    return text[text.rindex('/') + 1:]
+
+
 def force_save_pack(*save_pack: Save_Data):
-    done = []
+    # done = []
     queue_interrupt = False
     interrupt_count = 0
     saves_count = 0
@@ -44,22 +60,33 @@ def force_save_pack(*save_pack: Save_Data):
             save.blob = str(save.blob)
         if type(save.old_blob_for_overwrite) is int:
             save.old_blob_for_overwrite = str(save.old_blob_for_overwrite)
+        # done.append(False)
 
-    while not all_done:
+    print(save_pack)
+
+    while saves_count < len(save_pack):
+        #TODO fix saves overflowing
+        print(saves_count)
         try:
             time.sleep(.3)
             save = save_pack[saves_count]
-            if save.isPickle:
+            print(save)
+            if save.file_type == 'pickle':
                 if save.old_blob_for_overwrite is not None:
-                    done[saves_count] = io.overwrite_in_pkl(save.file_loc, save.old_blob_for_overwrite, save.blob)
+                    done = io.pkl_overwrite(save.file_loc, save.old_blob_for_overwrite, save.blob)
                 else:
-                    done[saves_count] = io.append_all_to_pkl(save.file_loc, save.blob)
+                    done = io.pkl_append_all(save.file_loc, save.blob)
+            elif save.file_type == 'image':
+                done = io.save_img(save.file_loc, save.blob)
+            elif save.file_type == 'css':
+                done = io.save_css(save.file_loc, save.blob)
             else:
-                done[saves_count] = io.save_html(save.file_loc, save.blob)
-            saves_count = saves_count + 1
-            all_done = True
-            for d in done:
-                all_done = all_done and d
+                done = io.save_text(save.file_loc, save.blob)
+            if done:
+                saves_count = saves_count + 1
+            # all_done = True
+            # for d in done:
+            #     all_done = all_done and d
         except KeyboardInterrupt:
             interrupt_count = interrupt_count + 1
             if interrupt_count == 1:
@@ -71,7 +98,7 @@ def force_save_pack(*save_pack: Save_Data):
                 continue
             else:
                 print('Ok fine jeez you got it chief')
-                all_done = True
+                saves_count = len(save_pack)
     if queue_interrupt:
         _thread.interrupt_main()
 
@@ -100,9 +127,9 @@ def force_save(*loc_data):
             time.sleep(.3)
             save_pack = loc_data[saves_count]
             if len(save_pack) > 2:
-                done[saves_count] = io.overwrite_in_pkl(save_pack[0], save_pack[1], save_pack[2])
+                done[saves_count] = io.pkl_overwrite(save_pack[0], save_pack[1], save_pack[2])
             else:
-                done[saves_count] = io.append_all_to_pkl(save_pack[0], save_pack[1])
+                done[saves_count] = io.pkl_append_all(save_pack[0], save_pack[1])
             saves_count = saves_count + 1
             all_done = True
             for d in done:

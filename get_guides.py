@@ -1,10 +1,12 @@
 import copy
 
-import pkl_io as io
+import scraper_io as io
 import constants
 import progress_data_structures as ds
-from bs4 import NavigableString
 from bs4 import BeautifulSoup
+
+type LinkStepList = list[ds.Link_Step]
+type Save_Pack = list[ds.Save_Data]
 
 
 def create_console_steps(consoles_loc):
@@ -90,13 +92,18 @@ def get_guide_text(page_soup):
     return new_save
 
 
-def get_guide_html(page_soup, base_url):
-    guide_html_list = []
+def get_guide_html(page_soup, base_url) -> Save_Pack:
+    guide_save_pack = []
     toc_link_list = page_soup.select('#faqwrap .ftoc a')
     page_content = page_soup.select_one('#faqwrap')
     html_strs = []
-    html_strs.append('!<DOCTYPE html>')
-    html_strs.append('<link id="core_css" href="./temp_files/thecss.css" rel="stylesheet" type="text/css">')
+    html_strs.append('<!DOCTYPE html>')
+    css_name = get_css_name(page_soup)
+    if not io.css_exists(css_name):
+        guide_save_pack.append(create_css_save_data(page_soup))
+    html_strs.append('<link id="core_css" href="../../{0}{1}" rel="stylesheet" type="text/css">'
+                     .format(io.CSS_LOC, css_name))
+    # html_strs.append('<link id="core_css" href="{0}" rel="stylesheet" type="text/css">'.format())
     html_strs.append('<div class="container">')
     html_strs.append('<div id="faqwrap" class="ffaq ffaqbody">')
     html_strs.append(page_content)
@@ -104,22 +111,30 @@ def get_guide_html(page_soup, base_url):
     html_strs.append('</div>')
     page_title = toc_link_list[0]
     new_save = ds.Save_Data(page_title, html_strs)
-    guide_html_list.append(new_save)
+    guide_save_pack.append(new_save)
     for toc_name in toc_link_list[1:]:
+        img_list = []
+        html_strs = []
         page_url = base_url + '/' + toc_name
         page_soup = constants.heat_soup(page_url)
         page_content = page_soup.select_one('#faqwrap')
-        html_strs = []
+        if constants.DL_IMAGES:
+            pic_names = map(lambda a: a['src'], page_content.select("img"))
+            pic_links = map(lambda a: constants.URL_gamefaqs + '/' + a['src'], page_content.select("img"))
+            for img, name in zip(page_content.select("img"), pic_names):
+                img['src'] = './img' + name
+            # img_list
         html_strs.append('!<DOCTYPE html>')
-        html_strs.append('<link id="core_css" href="./temp_files/thecss.css" rel="stylesheet" type="text/css">')
+        html_strs.append('<link id="core_css" href="../../{0}{1}" rel="stylesheet" type="text/css">'
+                         .format(io.CSS_LOC, css_name))
         html_strs.append('<div class="container">')
         html_strs.append('<div id="faqwrap" class="ffaq ffaqbody">')
         html_strs.append(page_content)
         html_strs.append('</div')
         html_strs.append('</div>')
         new_save = ds.Save_Data(toc_name, html_strs)
-        guide_html_list.append(new_save)
-    return guide_html_list
+        guide_save_pack.append(new_save)
+    return guide_save_pack
 
 
 def create_dl_steps(game_id, guide_links) -> list[ds.Link_Step]:
@@ -130,37 +145,82 @@ def create_dl_steps(game_id, guide_links) -> list[ds.Link_Step]:
         href = guide_link['href']
         gl_name = href[href.rindex('/') + 1:]
         guide_dl_steps.append(ds.Link_Step(gl_name, href, False))
-    io.append_all_to_pkl(game_id, guide_dl_steps)
+    io.pkl_append_all(game_id, guide_dl_steps)
     return guide_dl_steps
+
+
+def get_css_name(soup) -> str:
+    tag = soup.select_one("link#core_css")
+    return constants.text_after_last_slash(tag['href'])
+
+def create_css_save_data(soup) -> ds.Save_Data:
+    tag = soup.select_one("link#core_css")
+    css_name = constants.text_after_last_slash(tag['href'])
+    # linked_data_map = map(lambda val: constants.text_after_last_slash(val['href']), soup.select("link"))
+    # linked_css_list = list(filter(lambda val: val.endswith('.css'), linked_data_map))
+    linked_url = constants.URL_gamefaqs + constants.URL_css + '/' + css_name
+    css_sd = ds.Save_Data(css_name)
+    css_sd.blob = constants.url_request_blob(linked_url).text
+    css_sd.file_type = 'css'
+    return css_sd
 
 
 def test_link():
     tg = open('./temp_files/tg.htm', 'r')
     soup = BeautifulSoup(tg, "html.parser")
-    # soup = constants.heat_soup('https://gamefaqs.gamespot.com/ps4/200179-red-dead-redemption-2/faqs/76594')
+    tag = soup.select_one("link#core_css")
+    css_name = constants.text_after_last_slash(tag['href'])
+    return css_name
+    # spe = map(lambda a: constants.text_after_last_slash(a['href']), soup.select_one("link#core_css"))
+    # slef = list(filter(lambda a: a.endswith('.css'), spe))
+
+
+def good_shit():
+    # tg = open('./temp_files/tg.htm', 'r')
+    # soup = BeautifulSoup(tg, "html.parser")
+    soup = constants.heat_soup('https://gamefaqs.gamespot.com/ps4/200179-red-dead-redemption-2/faqs/76594')
     whatiwant = soup.select_one('#faqwrap')
-    # print(whatiwant)
+    if constants.DL_IMAGES:
+        pic_names = list(map(lambda a: a['src'][a['src'].rindex('/'):], whatiwant.select("img")))
+        pic_links = list(map(lambda a: constants.URL_gamefaqs + a['src'], whatiwant.select("img")))
+        for img, name in zip(whatiwant.select("img"), pic_names):
+            img['src'] = './img' + name
+        print(pic_names)
+        print(pic_links)
+    save_pack = []
     html_strs = []
-    html_strs.append('!<DOCTYPE html>')
-    html_strs.append('<link id="core_css" href="./temp_files/thecss.css" rel="stylesheet" type="text/css">')
+    html_strs.append('<!DOCTYPE html>')
+    css_name = get_css_name(soup)
+    print(css_name)
+    print(io.css_exists(css_name))
+    input("Press Enter to continue...")
+    if not io.css_exists(css_name):
+        save_pack.append(create_css_save_data(soup))
+    html_strs.append('<link id="core_css" href="../../{0}{1}" rel="stylesheet" type="text/css">'
+                     .format(io.CSS_LOC, css_name))
     html_strs.append('<div class="container">')
     html_strs.append('<div id="faqwrap" class="ffaq ffaqbody">')
+    html_strs.append('<h1 class="page=title">{0}</h1>'.format('Red Dead Redemption 2'))
     html_strs.extend(whatiwant.children)
     html_strs.append('</div')
     html_strs.append('</div>')
-    io.save_html('temp_files/here.html', html_strs)
-    # for c in whatiwant.descendants:
-    #     print(str(c))
-        # if isinstance(c, NavigableString):
-        #     print(c)
-        # else:
-        #     if c.select_one('img') is not None:
-        #         print(c.select_one('img')['src'])
-    tg.close()
-    # con = whatiwant.children[0]
-    # print(con)
-    # for ch in con.descendants:
-    #     print(ch)
+    html_save_data = ds.Save_Data('./game_name/guide by author/sfse')
+    html_save_data.blob = html_strs
+    html_save_data.file_type = 'html'
+    save_pack.append(html_save_data)
+    # io.save_text('temp_files/game_name/guide by author/sfse.html', html_strs)
+    if constants.DL_IMAGES:
+        img_save_data = ds.Save_Data('./game_name/guide by author/img' + list(pic_names)[0])
+        img_save_data.blob = constants.url_request_blob(list(pic_links)[0])
+        img_save_data.file_type = 'image'
+        save_pack.append(img_save_data)
+    print(len(save_pack))
+    input("Press Enter to continue...")
+    constants.force_save_pack(*save_pack)
+        # io.save_img('./temp_files/game_name/guide by author/img/' + list(pic_names)[0],
+        #             constants.url_request_blob(list(pic_links)[0]))
+
+
 
 def test_run():
     console_test = create_console_steps(constants.CONSOLE_LINK_LIST_LOC)[0]

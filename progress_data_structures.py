@@ -1,4 +1,6 @@
 import copy
+import constants
+import scraper_io as io
 
 
 class Save_Name:
@@ -68,7 +70,6 @@ class Link_Step(Save_Name):
         return "Link Step {0} \n    {1}, {2}" \
             .format(self.name, self.link, "Finished" if self.completion else "Incomplete")
 
-
 class Guide_Data():
     def __init__(self):
         self.title = ''
@@ -89,9 +90,13 @@ class Guide_Data():
             .format(self.title, self.author, self.platform, self.version, self.year)
 
 class Save_Data():
-    def __init__(self, file_loc = '', blob = None, old_blob = None, isPickle=False):
+    def __init__(self, file_loc='', blob=None, old_blob=None, file_type='text'):
         self.file_loc = file_loc
-        self.isPickle = isPickle
+        self.file_type = file_type
         self.blob = blob
         self.old_blob_for_overwrite = old_blob
         self.__done = False
+
+    def __str__(self):
+        return '{0} save pack \n  {1}' \
+                .format(self.file_type, self.file_loc)
