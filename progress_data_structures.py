@@ -70,8 +70,10 @@ class Link_Step(Save_Name):
         return "Link Step {0} \n    {1}, {2}" \
             .format(self.name, self.link, "Finished" if self.completion else "Incomplete")
 
+
 class Guide_Data():
     def __init__(self):
+        self.game = ''
         self.title = ''
         self.author = ''
         self.version = ''
@@ -82,12 +84,15 @@ class Guide_Data():
         self.html = False
 
     def save_title(self):
-        return '{0}{1} - {2} ({3})' \
-            .format('[!] ' if self.starred else '', self.author, self.title, self.platform)
+        star_ornament = '[!] ' if self.starred else ''
+        return f'{star_ornament}{self.author} - {self.title} ({self.platform})'
+        # return '{0}{1} - {2} ({3})' \
+        #     .format('[!] ' if self.starred else '', self.author, self.title, self.platform)
 
     def __str__(self):
-        return '{0} by {1} for {2}, {3}, {4}' \
-            .format(self.title, self.author, self.platform, self.version, self.year)
+        return f'{self.title} by {self.author} for {self.platform}, {self.version}, {self.year}'
+        # return '{0} by {1} for {2}, {3}, {4}' \
+        #     .format(self.title, self.author, self.platform, self.version, self.year)
 
 class Save_Data():
     def __init__(self, file_loc='', blob=None, old_blob=None, file_type='text'):

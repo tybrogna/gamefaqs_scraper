@@ -1,5 +1,6 @@
 import copy
 
+import html_guide_manager
 import scraper_io as io
 import constants
 import progress_data_structures as ds
@@ -13,8 +14,6 @@ def create_console_steps(consoles_loc):
     steps = []
     console_link_steps = io.unpickle(consoles_loc)
     for console in console_link_steps:
-        # if test:
-        #     print("get_game_links.py - adding {0} to steps".format(console.name))
         steps.append(ds.File_Step(console.name, console.link, "{0}_game_list".format(console.name), console.completion))
     return steps
 
@@ -23,7 +22,6 @@ def create_game_steps(game_list_loc):
     steps = []
     game_link_steps = io.unpickle(game_list_loc)
     for game in game_link_steps:
-        # print(game)
         steps.append(ds.File_Step(game.name, game.link, game.name + '/', game.completion))
     return steps
 
@@ -61,10 +59,9 @@ def get_game_aliases(page_soup):
     return alias_url_list
 
 
-def get_alias_save_data(alias_URL_list):
+def create_alias_save_data(alias_URL_list):
     alias_SD_list = []
     for alias in alias_URL_list:
-        # alias_sd = get_alias_save_data(alias)
         alias_no_slash = alias[1:]
         alias_console = alias_no_slash[:alias_no_slash.index('/')]
         alias_link = alias_no_slash[alias_no_slash.index('/') + 1:]
@@ -75,7 +72,6 @@ def get_alias_save_data(alias_URL_list):
             file_loc = '{0}_game_list'.format(alias_console)
             old_step = ds.Link_Step(alias_game_id, alias_link, False)
             new_step = ds.Link_Step(alias_game_id, alias_link, True)
-            # alias_save_data = ['{0}_game_list'.format(alias_console), old_step, new_step]
             alias_SD = ds.Save_Data(file_loc, new_step, old_step, True)
             alias_SD_list.append(alias_SD)
     return alias_SD_list
@@ -83,58 +79,57 @@ def get_alias_save_data(alias_URL_list):
 
 def get_guide_text(page_soup):
     guide_text = page_soup.select('#faqtext pre')
+    guide_text_list = []
     if guide_text is not None:
-        guide_text_list = []
         for gt in guide_text:
-            guide_text_list.append(guide_text.contents)
+            guide_text_list.append(gt.contents)
     new_save = ds.Save_Data()
     new_save.blob = guide_text_list
     return new_save
 
 
-def get_guide_html(page_soup, base_url) -> Save_Pack:
-    guide_save_pack = []
-    toc_link_list = page_soup.select('#faqwrap .ftoc a')
-    page_content = page_soup.select_one('#faqwrap')
-    html_strs = []
-    html_strs.append('<!DOCTYPE html>')
-    css_name = get_css_name(page_soup)
-    if not io.css_exists(css_name):
-        guide_save_pack.append(create_css_save_data(page_soup))
-    html_strs.append('<link id="core_css" href="../../{0}{1}" rel="stylesheet" type="text/css">'
-                     .format(io.CSS_LOC, css_name))
-    # html_strs.append('<link id="core_css" href="{0}" rel="stylesheet" type="text/css">'.format())
-    html_strs.append('<div class="container">')
-    html_strs.append('<div id="faqwrap" class="ffaq ffaqbody">')
-    html_strs.append(page_content)
-    html_strs.append('</div')
-    html_strs.append('</div>')
-    page_title = toc_link_list[0]
-    new_save = ds.Save_Data(page_title, html_strs)
-    guide_save_pack.append(new_save)
-    for toc_name in toc_link_list[1:]:
-        img_list = []
-        html_strs = []
-        page_url = base_url + '/' + toc_name
-        page_soup = constants.heat_soup(page_url)
-        page_content = page_soup.select_one('#faqwrap')
-        if constants.DL_IMAGES:
-            pic_names = map(lambda a: a['src'], page_content.select("img"))
-            pic_links = map(lambda a: constants.URL_gamefaqs + '/' + a['src'], page_content.select("img"))
-            for img, name in zip(page_content.select("img"), pic_names):
-                img['src'] = './img' + name
-            # img_list
-        html_strs.append('!<DOCTYPE html>')
-        html_strs.append('<link id="core_css" href="../../{0}{1}" rel="stylesheet" type="text/css">'
-                         .format(io.CSS_LOC, css_name))
-        html_strs.append('<div class="container">')
-        html_strs.append('<div id="faqwrap" class="ffaq ffaqbody">')
-        html_strs.append(page_content)
-        html_strs.append('</div')
-        html_strs.append('</div>')
-        new_save = ds.Save_Data(toc_name, html_strs)
-        guide_save_pack.append(new_save)
-    return guide_save_pack
+# def get_guide_html(page_soup, base_url) -> Save_Pack:
+#     guide_save_pack = []
+#     toc_link_list = page_soup.select('#faqwrap .ftoc a')
+#     page_content = page_soup.select_one('#faqwrap')
+#     html_strs = []
+#     html_strs.append('<!DOCTYPE html>')
+#     css_name = get_css_name(page_soup)
+#     if not io.css_exists(css_name):
+#         guide_save_pack.append(create_css_save_data(page_soup))
+#     html_strs.append('<link id="core_css" href="../../{0}{1}" rel="stylesheet" type="text/css">'
+#                      .format(io.CSS_LOC, css_name))
+#     html_strs.append('<div class="container">')
+#     html_strs.append('<div id="faqwrap" class="ffaq ffaqbody">')
+#     html_strs.append(page_content)
+#     html_strs.append('</div')
+#     html_strs.append('</div>')
+#     page_title = toc_link_list[0]
+#     new_save = ds.Save_Data(page_title, html_strs)
+#     guide_save_pack.append(new_save)
+#     for toc_name in toc_link_list[1:]:
+#         img_list = []
+#         html_strs = []
+#         page_url = base_url + '/' + toc_name
+#         page_soup = constants.heat_soup(page_url)
+#         page_content = page_soup.select_one('#faqwrap')
+#         if constants.DL_IMAGES:
+#             pic_names = map(lambda a: a['src'], page_content.select("img"))
+#             pic_links = map(lambda a: constants.URL_gamefaqs + '/' + a['src'], page_content.select("img"))
+#             for img, name in zip(page_content.select("img"), pic_names):
+#                 img['src'] = './img' + name
+#             # img_list
+#         html_strs.append('!<DOCTYPE html>')
+#         html_strs.append('<link id="core_css" href="../../{0}{1}" rel="stylesheet" type="text/css">'
+#                          .format(io.CSS_LOC, css_name))
+#         html_strs.append('<div class="container">')
+#         html_strs.append('<div id="faqwrap" class="ffaq ffaqbody">')
+#         html_strs.append(page_content)
+#         html_strs.append('</div')
+#         html_strs.append('</div>')
+#         new_save = ds.Save_Data(toc_name, html_strs)
+#         guide_save_pack.append(new_save)
+#     return guide_save_pack
 
 
 def create_dl_steps(game_id, guide_links) -> list[ds.Link_Step]:
@@ -149,77 +144,38 @@ def create_dl_steps(game_id, guide_links) -> list[ds.Link_Step]:
     return guide_dl_steps
 
 
-def get_css_name(soup) -> str:
-    tag = soup.select_one("link#core_css")
-    return constants.text_after_last_slash(tag['href'])
+# def get_css_name(soup) -> str:
+#     tag = soup.select_one("link#core_css")
+#     return constants.text_after_last_slash(tag['href'])
 
-def create_css_save_data(soup) -> ds.Save_Data:
-    tag = soup.select_one("link#core_css")
-    css_name = constants.text_after_last_slash(tag['href'])
-    # linked_data_map = map(lambda val: constants.text_after_last_slash(val['href']), soup.select("link"))
-    # linked_css_list = list(filter(lambda val: val.endswith('.css'), linked_data_map))
-    linked_url = constants.URL_gamefaqs + constants.URL_css + '/' + css_name
-    css_sd = ds.Save_Data(css_name)
-    css_sd.blob = constants.url_request_blob(linked_url).text
-    css_sd.file_type = 'css'
-    return css_sd
+# def create_css_save_data(soup) -> ds.Save_Data:
+#     tag = soup.select_one("link#core_css")
+#     css_name = constants.text_after_last_slash(tag['href'])
+#     linked_url = constants.URL_gamefaqs + constants.URL_css + '/' + css_name
+#     css_sd = ds.Save_Data(css_name)
+#     css_sd.blob = constants.url_request_blob(linked_url).text
+#     css_sd.file_type = 'css'
+#     return css_sd
 
 
 def test_link():
     tg = open('./temp_files/tg.htm', 'r')
     soup = BeautifulSoup(tg, "html.parser")
-    tag = soup.select_one("link#core_css")
-    css_name = constants.text_after_last_slash(tag['href'])
-    return css_name
-    # spe = map(lambda a: constants.text_after_last_slash(a['href']), soup.select_one("link#core_css"))
-    # slef = list(filter(lambda a: a.endswith('.css'), spe))
+    guide_metadata = get_guide_metadata(soup)
+    html_guide_manager.create_save_data(soup, guide_metadata, 'url')
+    print('donzo')
+    input("press enter to continue...")
+    return ''
 
 
 def good_shit():
     # tg = open('./temp_files/tg.htm', 'r')
     # soup = BeautifulSoup(tg, "html.parser")
-    soup = constants.heat_soup('https://gamefaqs.gamespot.com/ps4/200179-red-dead-redemption-2/faqs/76594')
-    whatiwant = soup.select_one('#faqwrap')
-    if constants.DL_IMAGES:
-        pic_names = list(map(lambda a: a['src'][a['src'].rindex('/'):], whatiwant.select("img")))
-        pic_links = list(map(lambda a: constants.URL_gamefaqs + a['src'], whatiwant.select("img")))
-        for img, name in zip(whatiwant.select("img"), pic_names):
-            img['src'] = './img' + name
-        print(pic_names)
-        print(pic_links)
-    save_pack = []
-    html_strs = []
-    html_strs.append('<!DOCTYPE html>')
-    css_name = get_css_name(soup)
-    print(css_name)
-    print(io.css_exists(css_name))
-    input("Press Enter to continue...")
-    if not io.css_exists(css_name):
-        save_pack.append(create_css_save_data(soup))
-    html_strs.append('<link id="core_css" href="../../{0}{1}" rel="stylesheet" type="text/css">'
-                     .format(io.CSS_LOC, css_name))
-    html_strs.append('<div class="container">')
-    html_strs.append('<div id="faqwrap" class="ffaq ffaqbody">')
-    html_strs.append('<h1 class="page=title">{0}</h1>'.format('Red Dead Redemption 2'))
-    html_strs.extend(whatiwant.children)
-    html_strs.append('</div')
-    html_strs.append('</div>')
-    html_save_data = ds.Save_Data('./game_name/guide by author/sfse')
-    html_save_data.blob = html_strs
-    html_save_data.file_type = 'html'
-    save_pack.append(html_save_data)
-    # io.save_text('temp_files/game_name/guide by author/sfse.html', html_strs)
-    if constants.DL_IMAGES:
-        img_save_data = ds.Save_Data('./game_name/guide by author/img' + list(pic_names)[0])
-        img_save_data.blob = constants.url_request_blob(list(pic_links)[0])
-        img_save_data.file_type = 'image'
-        save_pack.append(img_save_data)
-    print(len(save_pack))
-    input("Press Enter to continue...")
-    constants.force_save_pack(*save_pack)
-        # io.save_img('./temp_files/game_name/guide by author/img/' + list(pic_names)[0],
-        #             constants.url_request_blob(list(pic_links)[0]))
-
+    base_url = 'https://gamefaqs.gamespot.com/ps4/200179-red-dead-redemption-2/faqs/76594'
+    soup = constants.heat_soup(base_url)
+    metadata = get_guide_metadata(soup)
+    metadata.game = "Red Ded Redemption 2"
+    html_guide_manager.create_save_data(soup, metadata, base_url)
 
 
 def test_run():
@@ -269,9 +225,9 @@ def run():
         for game in game_steps:
             if game.completion:
                 continue
-            game_URL = constants.URL_gamefaqs + '/x/' + game.link + 'faqs'
-            game_soup = constants.heat_soup(game_URL)
-            alias_URL_list = get_game_aliases(game_soup)
+            game_url = constants.URL_gamefaqs + '/x/' + game.link + 'faqs'
+            game_soup = constants.heat_soup(game_url)
+            alias_url_list = get_game_aliases(game_soup)
             guide_links_list = get_all_guide_links(game_soup)
             guide_dl_steps = create_dl_steps(game.name, guide_links_list)
             for guide in guide_dl_steps:
@@ -279,28 +235,25 @@ def run():
                 guide_soup = constants.heat_soup(guide_url)
                 is_guide = guide_soup.select_one('div.ffaq') is not None
                 if not is_guide:
-                    guide_progress_SD = ds.Save_Data(game.name, guide.save_new_completion(), guide, True)
-                    # guide_progress_SD = [game.name, guide, guide.save_new_completion()]
-                    constants.force_save_pack(guide_progress_SD)
+                    guide_progress_data = ds.Save_Data(game.name, guide.save_new_completion(), guide, True)
+                    constants.force_save_pack(guide_progress_data)
                     continue
                 guide_metadata = get_guide_metadata(guide_soup)
-                alias_SD_list = get_alias_save_data(alias_URL_list)
-                guide_progress_SD = ds.Save_Data(game.name, guide.save_new_completion(), guide, True)
-                # guide_progress_SD = [game.name, guide, guide.save_new_completion()]
+                guide_metadata.game = game.name
+                alias_data_list = create_alias_save_data(alias_url_list)
+                guide_progress_data = ds.Save_Data(game.name, guide.save_new_completion(), guide, True)
                 if guide_metadata.html:
-                    guide_html_list = get_guide_html(guide_soup, guide_url)
-                    folder_title = guide_metadata.save_title()
-                    for guide_html in guide_html_list:
-                        guide_html[0] = folder_title + '/' + guide_html[0]
-                    constants.force_save_pack(*guide_html_list, guide_progress_SD, *alias_SD_list)
+                    html_guide_manager.create_save_data(guide_soup, guide_metadata, guide_url)
+                    constants.force_save_pack(guide_progress_data, *alias_data_list)
                 else:
-                    guide_SD = get_guide_text(guide_soup)
-                    guide_SD.file_loc = guide_metadata.save_title()
-                    guide_progress_SD = ds.Save_Data(game.name)
-                    guide_progress_SD.blob = guide.save_new_completion()
-                    guide_progress_SD.old_blob_for_overwrite = guide
-                    guide_progress_SD = [game.name, guide, guide.save_new_completion()]
-                    constants.force_save_pack(guide_SD, guide_progress_SD, *alias_SD_list)
+                    guide_data = get_guide_text(guide_soup)
+                    guide_data.file_loc = guide_metadata.save_title()
+                    guide_progress_data = ds.Save_Data(game.name, guide.save_new_completion(), guide, True)
+                    # guide_progress_data = ds.Save_Data(game.name)
+                    # guide_progress_data.blob = guide.save_new_completion()
+                    # guide_progress_data.old_blob_for_overwrite = guide
+                    # guide_progress_data = [game.name, guide, guide.save_new_completion()]
+                    constants.force_save_pack(guide_data, guide_progress_data, *alias_data_list)
 
                     # guide_text = get_guide_text(guide_soup)
                     # guide_SD = [guide_metadata.save_title(), guide_text]

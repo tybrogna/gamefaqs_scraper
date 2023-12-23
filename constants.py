@@ -65,12 +65,9 @@ def force_save_pack(*save_pack: Save_Data):
     print(save_pack)
 
     while saves_count < len(save_pack):
-        #TODO fix saves overflowing
-        print(saves_count)
         try:
             time.sleep(.3)
             save = save_pack[saves_count]
-            print(save)
             if save.file_type == 'pickle':
                 if save.old_blob_for_overwrite is not None:
                     done = io.pkl_overwrite(save.file_loc, save.old_blob_for_overwrite, save.blob)
@@ -84,9 +81,6 @@ def force_save_pack(*save_pack: Save_Data):
                 done = io.save_text(save.file_loc, save.blob)
             if done:
                 saves_count = saves_count + 1
-            # all_done = True
-            # for d in done:
-            #     all_done = all_done and d
         except KeyboardInterrupt:
             interrupt_count = interrupt_count + 1
             if interrupt_count == 1:
