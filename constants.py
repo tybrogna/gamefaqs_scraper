@@ -42,11 +42,19 @@ def url_request_blob(url: str) -> requests.Response:
 
 
 def text_before_last_slash(text: str) -> str:
-    return text[:text.rindex('/')]
+    if '/' in text:
+        return text[:text.rindex('/')]
+    elif '\\' in text:
+        return text[:text.rindex('\\')]
+    return ''
 
 
 def text_after_last_slash(text: str) -> str:
-    return text[text.rindex('/') + 1:]
+    if '/' in text:
+        return text[text.rindex('/') + 1:]
+    elif '\\' in text:
+        return text[text.rindex('\\') + 1:]
+    return ''
 
 
 def force_save_pack(*save_pack: Save_Data):

@@ -1,3 +1,9 @@
+Dec 26 2023
+    so much stuff. been working on and off, never uploaded, never commented in the patch notes
+    added html_guide_manager.py
+        is just get_guides.py but for html guides
+    coming along real well, got a lot of software-engineery things to do, but the features are all here now
+
 Dec 3 2023
     get_guides.py updates
         run

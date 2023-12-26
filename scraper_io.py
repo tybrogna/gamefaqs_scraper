@@ -5,6 +5,8 @@ import sqlite3
 
 import constants
 
+#TODO change all this over to python os.path.join functions
+ABSOLUTE_PATH = ''
 DATA_FOLDER = './temp_files/'
 DATABASE_NAME = 'scraper.db'
 CSS_LOC = 'web_files/'
@@ -13,6 +15,7 @@ override_folder = ''
 
 def setup(override_loc=''):
     global override_folder
+    global ABSOLUTE_PATH
     override_folder = override_loc
     if not override_folder == '' and not override_folder.endswith('/'):
         override_folder = override_folder + '/'
@@ -21,6 +24,7 @@ def setup(override_loc=''):
         print('data folder created')
     if not os.path.exists(DATA_FOLDER + CSS_LOC):
         os.makedirs(DATA_FOLDER + CSS_LOC)
+    ABSOLUTE_PATH = os.path.dirname(os.path.abspath(DATA_FOLDER))
 
 
 def __create_folder(folder_loc):
