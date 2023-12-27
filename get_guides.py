@@ -6,7 +6,7 @@ import constants
 import progress_data_structures as ds
 from bs4 import BeautifulSoup
 
-type LinkStepList = list[ds.Link_Step]
+type Link_Step_List = list[ds.Link_Step]
 type Save_Pack = list[ds.Save_Data]
 
 
@@ -61,9 +61,9 @@ def get_game_aliases(page_soup):
     return alias_url_list
 
 
-def create_alias_save_data(alias_URL_list):
-    alias_SD_list = []
-    for alias in alias_URL_list:
+def create_alias_save_data(alias_url_list):
+    alias_sd_list = []
+    for alias in alias_url_list:
         alias_no_slash = alias[1:]
         alias_console = alias_no_slash[:alias_no_slash.index('/')]
         alias_link = alias_no_slash[alias_no_slash.index('/') + 1:]
@@ -74,9 +74,9 @@ def create_alias_save_data(alias_URL_list):
             file_loc = '{0}_game_list'.format(alias_console)
             old_step = ds.Link_Step(alias_game_id, alias_link, False)
             new_step = ds.Link_Step(alias_game_id, alias_link, True)
-            alias_SD = ds.Save_Data(file_loc, new_step, old_step, True)
-            alias_SD_list.append(alias_SD)
-    return alias_SD_list
+            alias_sd = ds.Save_Data(file_loc, new_step, old_step, True)
+            alias_sd_list.append(alias_sd)
+    return alias_sd_list
 
 
 def get_guide_text(page_soup):
@@ -106,7 +106,7 @@ def test_link():
     tg = open('./temp_files/tg.htm', 'r')
     soup = BeautifulSoup(tg, "html.parser")
     guide_metadata = get_guide_metadata(soup)
-    html_guide_manager.create_save_data(soup, guide_metadata, 'url')
+    html_guide_manager.save_guide(soup, guide_metadata, 'url')
     print('donzo')
     input("press enter to continue...")
     return ''

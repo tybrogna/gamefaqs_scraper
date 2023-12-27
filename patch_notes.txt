@@ -1,3 +1,11 @@
+Dec 27 2023
+    get_guides.py
+        added threading for image downloading. wanna add it for file saving.
+    scraper_io.py
+        messed with saving, trying to remove the guesswork of 'where is the slash' with os.path.join
+        this WILL have bugs. im not checking them now
+
+
 Dec 26 2023
     so much stuff. been working on and off, never uploaded, never commented in the patch notes
     added html_guide_manager.py

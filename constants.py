@@ -72,6 +72,7 @@ def force_save_pack(*save_pack: Save_Data):
 
     print(save_pack)
 
+    # TODO futurize this?
     while saves_count < len(save_pack):
         try:
             time.sleep(.3)

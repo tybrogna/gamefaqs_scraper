@@ -5,26 +5,23 @@ import sqlite3
 
 import constants
 
-#TODO change all this over to python os.path.join functions
 ABSOLUTE_PATH = ''
-DATA_FOLDER = './temp_files/'
+DATA_FOLDER = 'temp_files'
 DATABASE_NAME = 'scraper.db'
-CSS_LOC = 'web_files/'
+CSS_LOC = 'web_files'
 override_folder = ''
 
 
 def setup(override_loc=''):
-    global override_folder
-    global ABSOLUTE_PATH
-    override_folder = override_loc
-    if not override_folder == '' and not override_folder.endswith('/'):
-        override_folder = override_folder + '/'
-    if not os.path.exists(DATA_FOLDER):
-        os.makedirs(DATA_FOLDER)
-        print('data folder created')
-    if not os.path.exists(DATA_FOLDER + CSS_LOC):
-        os.makedirs(DATA_FOLDER + CSS_LOC)
+    global ABSOLUTE_PATH, DATA_FOLDER
+    if override_loc != '':
+        DATA_FOLDER = override_loc
     ABSOLUTE_PATH = os.path.dirname(os.path.abspath(DATA_FOLDER))
+    ABSOLUTE_PATH = os.path.join(ABSOLUTE_PATH, DATA_FOLDER)
+    if not os.path.exists(ABSOLUTE_PATH):
+        os.makedirs(ABSOLUTE_PATH)
+    if not os.path.exists(os.path.join(DATA_FOLDER, CSS_LOC)):
+        os.makedirs(os.path.join(DATA_FOLDER, CSS_LOC))
 
 
 def __create_folder(folder_loc):
@@ -35,10 +32,10 @@ def __create_folder(folder_loc):
 
 
 def __save_in_data(file_loc):
-    if override_folder != '' and not file_loc.startswith(override_folder):
-        file_loc = override_folder + file_loc
-    elif not file_loc.startswith(DATA_FOLDER):
-        file_loc = DATA_FOLDER + file_loc
+    # if override_folder != '' and not file_loc.startswith(override_folder):
+    #     file_loc = override_folder + file_loc
+    if not file_loc.startswith(ABSOLUTE_PATH):
+        file_loc = os.path.join(ABSOLUTE_PATH, file_loc)
     __create_folder(constants.text_before_last_slash(file_loc))
     return file_loc
 

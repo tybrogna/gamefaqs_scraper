@@ -3,6 +3,7 @@ import re
 import constants
 import scraper_io as io
 import progress_data_structures as ds
+from concurrent.futures import ThreadPoolExecutor
 from bs4 import BeautifulSoup
 from bs4 import Tag
 
@@ -57,7 +58,6 @@ def __create_html_save_data(metadata: ds.Guide_Data, page_title: Tag, css_name: 
     html_blob.append('<!DOCTYPE html>')
     css_location = io.ABSOLUTE_PATH + io.CSS_LOC + css_name
     html_blob.append(f'<link id="core_css" href="{css_location}" rel="stylesheet" type="text/css">')
-    # html_blob.append('<link id="core_css" href="{0}" rel="stylesheet" type="text/css">'.format())
     html_blob.append('<div class="container">')
     html_blob.append('<div id="faqwrap" class="ffaq ffaqbody">')
     html_blob.append(page_content)
@@ -79,12 +79,23 @@ def __create_image_save_data(metadata: ds.Guide_Data, page_content):
     save_pack = []
     pic_names = list(map(lambda a: a['src'][a['src'].rindex('/'):], page_content.select("img")))
     pic_links = list(map(lambda a: constants.URL_gamefaqs + a['src'], page_content.select("img")))
-    for img, name in zip(pic_links, pic_names):
-        img_save_data = ds.Save_Data('{0} by {1}/img{2}'.format(metadata.title, metadata.author, name))
-        img_save_data.blob = constants.url_request_blob(img)
-        img_save_data.file_type = 'image'
-        save_pack.append(img_save_data)
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futures = []
+        for img_url, img_name in zip(pic_links, pic_names):
+            futures.append(pool.submit(__request_image_data, metadata, img_url, img_name))
+        for f in futures:
+            try:
+                save_pack.append(f.result())
+            except Exception:
+                print(f'couldnt save images for {metadata.game} for some reason')
     return save_pack
+
+
+def __request_image_data(metadata, img_url, img_name) -> ds.Save_Data:
+    img_save_data = ds.Save_Data('{0} by {1}/img{2}'.format(metadata.title, metadata.author, img_name))
+    img_save_data.blob = constants.url_request_blob(img_url)
+    img_save_data.file_type = 'image'
+    return img_save_data
 
 
 def __adjust_image_locations(page_content: Tag):
