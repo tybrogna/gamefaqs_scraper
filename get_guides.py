@@ -1,5 +1,3 @@
-import copy
-
 import html_guide_manager
 import scraper_io as io
 import constants
@@ -34,7 +32,7 @@ def get_all_guide_links(page_soup):
 
 
 def get_guide_metadata(page_soup):
-    guide_metadata = ds.Guide_Data()
+    guide_metadata = ds.Guide_Metadata()
     guide_metadata.game = page_soup.select_one('.platform-title :first-child').string
     guide_metadata.game = guide_metadata.game[:guide_metadata.game.rindex(' ')]
     title_and_author = page_soup.select_one('div.ffaq h2').get_text()

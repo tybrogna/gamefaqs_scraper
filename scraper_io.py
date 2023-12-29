@@ -24,7 +24,7 @@ def setup(override_loc=''):
         os.makedirs(os.path.join(DATA_FOLDER, CSS_LOC))
 
 
-def __create_folder(folder_loc):
+def create_folder(folder_loc):
     if not os.path.exists(folder_loc):
         os.makedirs(folder_loc)
         return True
@@ -36,7 +36,7 @@ def __save_in_data(file_loc):
     #     file_loc = override_folder + file_loc
     if not file_loc.startswith(ABSOLUTE_PATH):
         file_loc = os.path.join(ABSOLUTE_PATH, file_loc)
-    __create_folder(constants.text_before_last_slash(file_loc))
+    create_folder(constants.text_before_last_slash(file_loc))
     return file_loc
 
 
@@ -257,8 +257,6 @@ def css_exists(css_file_name):
 
 
 def save_css(css_loc: str, css):
-    if not css_loc.startswith(CSS_LOC):
-        css_loc = CSS_LOC + css_loc
     css_loc = __save_in_data(css_loc)
     create_file(css_loc)
     with atom(css_loc, mode='w', encoding='utf-8', overwrite=True) as write_file:

@@ -71,7 +71,7 @@ class Link_Step(Save_Name):
             .format(self.name, self.link, "Finished" if self.completion else "Incomplete")
 
 
-class Guide_Data():
+class Guide_Metadata():
     def __init__(self):
         self.game = ''
         self.title = ''
@@ -93,6 +93,12 @@ class Guide_Data():
         return f'{self.title} by {self.author} for {self.platform}, {self.version}, {self.year}'
         # return '{0} by {1} for {2}, {3}, {4}' \
         #     .format(self.title, self.author, self.platform, self.version, self.year)
+
+class Page_Metadata():
+    def __init__(self, game):
+        self.game = game
+        self.file_save_path = ''
+        self.image_save_path = ''
 
 class Save_Data():
     def __init__(self, file_loc='', blob=None, old_blob=None, file_type='text'):

@@ -1,3 +1,14 @@
+Dec 29 2023
+    progress_data_structures.py
+        renamed Guide_Data -> Guide_Metadata
+        added Page_Metadata class
+            realized i needed extra metadata for each page of an html guide
+    constants.py
+        file saving is now CONCURRENT :sparkles:
+    html_guide_manager.py
+        used os.path.join in more places
+        removing comments and test names
+
 Dec 27 2023
     get_guides.py
         added threading for image downloading. wanna add it for file saving.

@@ -1,5 +1,6 @@
 import os
 import copy
+import time
 
 import get_console_links
 import get_game_links
@@ -58,7 +59,6 @@ def run():
     create_progress_file()
     for step in steps:
         step_complete = check_progress(step.name)
-
         if step_complete:
             print("{0} is already complete".format(step.name))
             continue
@@ -93,7 +93,6 @@ def test():
 
     # io.test_print_pkl("3ds_game_list")
     # io.test_print_pkl(steps[0].save_loc)
-
 
 test()
 # run()
