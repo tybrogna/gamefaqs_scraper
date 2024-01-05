@@ -6,7 +6,7 @@ import sqlite3
 import constants
 
 ABSOLUTE_PATH = ''
-DATA_FOLDER = 'temp_files'
+DATA_FOLDER = 'data'
 DATABASE_NAME = 'scraper.db'
 CSS_LOC = 'web_files'
 override_folder = ''

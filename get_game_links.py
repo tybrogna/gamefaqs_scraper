@@ -99,3 +99,16 @@ def run():
             print("  Done")
             # force_save(console_step.save_loc, guide_link_steps, page_file_loc, page_at)
             input("Press Enter to continue...")
+
+
+def print_progress():
+    steps = io.unpickle(constants.CONSOLE_LINK_LIST_LOC)
+    num_steps = len(steps)
+    cur_step = 0
+    for idx, step in enumerate(steps):
+        if not step.completion:
+            cur_step = idx
+
+            break
+    print(f'  On step {cur_step} of {num_steps}')
+    print(f'  {step}')

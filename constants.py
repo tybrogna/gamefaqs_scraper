@@ -104,7 +104,7 @@ def force_save_pack_sync(*save_pack: Save_Data):
                 print('Ok fine jeez you got it chief')
                 saves_count = len(save_pack)
     if queue_interrupt:
-        _thread.interrupt_main()
+        raise KeyboardInterrupt
 
 
 def force_save_pack(*save_pack: Save_Data):

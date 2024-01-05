@@ -27,10 +27,10 @@ def remove_console_link():
 
 
 steps = [
-    ds.Main_Step('get_console_links', get_console_links.run, constants.CONSOLE_LINK_LIST_LOC, False),
+    ds.Main_Step('get_console_links', constants.CONSOLE_LINK_LIST_LOC, False),
     # ds.Main_Step('exclude_console_links', remove_console_link),
-    ds.Main_Step('get_game_links', get_game_links.run, constants.GAME_LINK_LIST_LOC, False),
-    ds.Main_Step('download_guides', get_guides.run)]
+    ds.Main_Step('get_game_links', constants.GAME_LINK_LIST_LOC, False),
+    ds.Main_Step('get_guides', False)]
 
 
 def create_progress_file():
@@ -40,7 +40,7 @@ def create_progress_file():
 
 
 def check_progress(step_name):
-    print("checking {0} step".format(step_name))
+    # print("checking {0} step".format(step_name))
     return io.pkl_contains_name("progress", step_name).completion
 
 
@@ -57,25 +57,38 @@ def run_db():
 def run():
     io.setup(override_folder_loc)
     create_progress_file()
-    for step in steps:
-        step_complete = check_progress(step.name)
-        if step_complete:
-            print("{0} is already complete".format(step.name))
-            continue
-        else:
-            print("running {0}".format(step.name))
-            complete = step.run_func()
-            if complete:
-                update_progress(step, True)
-                print("progress updated: {0} => Complete".format(step.name))
+    try:
+        for step in steps:
+            print("checking {0} step".format(step.name))
+            step_complete = check_progress(step.name)
+            if step_complete:
+                print("{0} is already complete".format(step.name))
+                continue
             else:
-                print("{0} failed".format(step.name))
+                print("running {0}".format(step.name))
+                complete = globals()[step.name].run()
+                if complete:
+                    update_progress(step, True)
+                    print("progress updated: {0} => Complete".format(step.name))
+                else:
+                    print("{0} failed".format(step.name))
+    except KeyboardInterrupt:
+        for step in steps:
+            step_complete = check_progress(step.name)
+            if step_complete:
+                continue
+            else:
+                print(f'stopped while performing the {step.name} step')
+                print(f'step progress ->')
+                globals()[step.name].print_progress()
+                break
 
 
 def test():
     print("hello world")
     io.setup()
-    get_guides.good_shit()
+    globals()['get_console_links'].print_progress()
+    # get_guides.good_shit()
 
     # io.try_sql()
 

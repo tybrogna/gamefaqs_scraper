@@ -94,3 +94,18 @@ def run():
     # io.append_all_to_pkl(step, fake_list)
     print("  Console Links Saved!!")
     return True
+
+
+def print_progress():
+    if not io.exists(constants.CONSOLE_LINK_LIST_LOC):
+        print('  Console Link Save File not created yet')
+        return
+    pkl_vals: list[ds.Link_Step] = io.unpickle(constants.CONSOLE_LINK_LIST_LOC)
+    num_steps = len(pkl_vals)
+    cur_step = 0
+    for idx, step_val in enumerate(pkl_vals):
+        if step_val.completion:
+            cur_step = idx
+            break
+    print(f'  On step {cur_step} of {num_steps}')
+    print(f'  {pkl_vals[cur_step]}')

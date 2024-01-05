@@ -1,3 +1,11 @@
+Jan 5 2024
+    adding interruption notes, as in, tells you the progress when you quit the program
+    progress_data_structures.py
+        changing the structure of Main_Step to not include a function pointer cuz of pickling purposes
+        should i convert all my modules to classes? the whole idea is they get pickled and copied.
+        since time immemorium people have used plain text save files, but not reflection;
+            not sure if this is bright idea or staggering inflexibility
+
 Dec 29 2023
     progress_data_structures.py
         renamed Guide_Data -> Guide_Metadata
