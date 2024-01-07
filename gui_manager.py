@@ -5,6 +5,7 @@ import typing
 from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
 
+img = None
 
 class Gui(tk_base.Tk):
     def __init__(self):
@@ -12,6 +13,9 @@ class Gui(tk_base.Tk):
         self.frames: dict = {}
         self.widgets: dict = {}
         self.save_loc = tk_base.StringVar()
+        self.fimage = tk_base.PhotoImage('C:/Users/tybro/Projects/gamefaqs_scraper/fb.png')
+        global img
+        img = tk_base.PhotoImage('C:/Users/tybro/Projects/gamefaqs_scraper/fb.png')
 
     def setup(self):
         self.title('Gamefaqs Scraper')
@@ -31,26 +35,31 @@ class Gui(tk_base.Tk):
         btn = ttk.Button(self, text=name, command=target_func)
         btn.pack()
 
-    def add_label(self, text: str):
-        ttk.Label(self, text=text).pack()
-
-    def add_entry(self, target_var: tk_base.StringVar):
-        ttk.Entry(self, textvariable=target_var).pack()
-
     def __grid_options(self):
         frame = ttk.Frame(self)
         # frame['borderwidth'] = 6
         # frame['relief'] = 'solid'
         frame.rowconfigure(0)
         frame.rowconfigure(1)
-        frame.columnconfigure(0, weight=2)
-        frame.columnconfigure(1, weight=2)
+        frame.columnconfigure(0)
+        frame.columnconfigure(1, weight=3)
+        frame.columnconfigure(2)
+        frame.columnconfigure(3)
         # frame.columnconfigure(2, weight=1)
-        ttk.Button(frame, text='Check Progress', command=lambda: filedialog.askopenfilename()).grid(row=0, column=0, padx=10, sticky=tk_base.W)
+        ttk.Button(frame, text='Check Progress').grid(row=0, column=0, padx=10, sticky=tk_base.W)
         ttk.Button(frame, text='Start Scraper').grid(row=1, column=0, padx=10, sticky=tk_base.W)
-        ttk.Label(frame, text='save location').grid(row=0, column=1, ipadx=20)
-        ttk.Entry(frame, textvariable=self.save_loc).grid(row=0, column=1, padx=10, sticky=tk_base.E)
+        ttk.Label(frame, text='save location').grid(row=0, column=1, ipadx=1, sticky=tk_base.E)
+        ttk.Entry(frame, textvariable=self.save_loc).grid(row=0, column=2, padx=10, sticky=tk_base.EW)
+        ttk.Button(frame, text='select save location', command=Gui.get_save_folder).grid(row=0, column=3, padx=1, sticky=tk_base.EW)
         frame.pack(fill=tk_base.BOTH)
+
+    @staticmethod
+    def get_save_folder():
+        loc = filedialog.askdirectory()
+        if loc:
+            print(f'found {loc}')
+        else:
+            print('nada')
 
     def __frame_scrollbox(self):
         frame = ttk.Frame(self)

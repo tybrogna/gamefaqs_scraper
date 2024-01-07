@@ -1,5 +1,6 @@
-Jan 6 2024
-    adding a gui! its going ok! it
+Jan 7 2024
+    adding a gui! its going ok! it's kinda almost done, and supposed to look kinda iffy,
+    but having it there makes it look more real.
 
 Jan 5 2024
     adding interruption notes, as in, tells you the progress when you quit the program
