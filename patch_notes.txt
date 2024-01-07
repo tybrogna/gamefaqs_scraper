@@ -1,3 +1,6 @@
+Jan 6 2024
+    adding a gui! its going ok! it
+
 Jan 5 2024
     adding interruption notes, as in, tells you the progress when you quit the program
     progress_data_structures.py

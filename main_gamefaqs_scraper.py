@@ -1,10 +1,10 @@
-import os
 import copy
-import time
+import tkinter
 
 import get_console_links
 import get_game_links
 import get_guides
+import gui_manager
 import scraper_io as io
 import progress_data_structures as ds
 import constants
@@ -43,6 +43,9 @@ def check_progress(step_name):
     # print("checking {0} step".format(step_name))
     return io.pkl_contains_name("progress", step_name).completion
 
+def check_full_progress():
+    print('here')
+    return
 
 def update_progress(step, completion):
     new_step = copy.deepcopy(step)
@@ -87,7 +90,16 @@ def run():
 def test():
     print("hello world")
     io.setup()
-    globals()['get_console_links'].print_progress()
+    gui = gui_manager.Gui()
+    gui.setup()
+    # gui.add_button('Check Progress', check_full_progress)
+    # gui.add_button('Start Scraper', run)
+    # gui.add_label('save location')
+    # baloney = tkinter.StringVar()
+    # baloney.set('haha')
+    # gui.add_entry(baloney)
+    gui.mainloop()
+    # globals()['get_console_links'].print_progress()
     # get_guides.good_shit()
 
     # io.try_sql()

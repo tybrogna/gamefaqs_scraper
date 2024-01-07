@@ -71,9 +71,6 @@ def force_save_pack_sync(*save_pack: Save_Data):
             save.old_blob_for_overwrite = str(save.old_blob_for_overwrite)
         # done.append(False)
 
-    print(save_pack)
-
-    # TODO futurize this?
     while saves_count < len(save_pack):
         try:
             time.sleep(.3)
