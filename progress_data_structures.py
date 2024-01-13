@@ -17,21 +17,21 @@ class Save_Name:
 
 
 class Main_Step(Save_Name):
-    def __init__(self, name, save_loc="", completion=False):
+    def __init__(self, name, completion=False):
         super().__init__(name)
-        self.save_loc: str = save_loc
+        # self.save_loc: str = save_loc
         self.completion: bool = completion
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, Main_Step):
             return NotImplemented
-        return self.name == other.name and self.save_loc == other.save_loc  # and self.completion == other.completion
+        return self.name == other.name #and self.save_loc == other.save_loc  # and self.completion == other.completion
 
     def __str__(self) -> str:
-        return "Main Step {0} \n    {1}, {2}" \
+        return "Main Step {0} \n    {1}" \
             .format(
                 self.name,
-                self.save_loc if self.save_loc != "" else "No Save Location",
+                # self.save_loc if self.save_loc != "" else "No Save Location",
                 "Finished" if self.completion else "Incomplete")
 
 
@@ -52,6 +52,22 @@ class File_Step(Save_Name):
     def __str__(self):
         return "File Step {0} \n    {1},\n    {2},\n    {3}" \
             .format(self.name, self.save_loc, self.link, "Finished" if self.completion else "Incomplete")
+
+
+class nfs(Save_Name):
+    def __init__(self, name, **config):
+        super().__init__(name)
+        self.save_loc = config['save_loc']
+        self.link = config['link']
+        self.completion = config['completion'] if config['completion'] else False
+
+    def __eq__(self, other):
+        if not isinstance(other, nfs):
+            return NotImplemented
+        return self.name == other.name
+
+    def __str__(self):
+        return f"File Step {self.name} \n    {self.save_loc},\n    {self.link},\n    {"Finished" if self.completion else "Incomplete"}"
 
 
 class Link_Step(Save_Name):

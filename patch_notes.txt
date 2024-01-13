@@ -1,3 +1,39 @@
+Jan 12 2024
+    General
+        GUI.display added throughout the codebase, displays info to the UI
+        GUI runs on its own thread, now can interact with the buttons while scraper is running
+            Tkinter is NOT thread safe, the consequences of this have yet to manifest
+        Threaded interruption added to most work files. should fail gracefully when hitting the button (and fail regular when closing)
+    main_gamefaqs_scraper.py
+        stripped the steps down into a shadow of their former self
+            it was a good idea at first, but alas, now its barely more than a string list
+    scraper_io.py
+        added can_find_save_data
+    constants.py
+        removed force_save function
+            replaced with force_save_pack a while ago
+    get_console_links.py
+        function comments added
+        counting file added, for completion verification (probably unnecessary)
+        verify_complete added (probably unnecessary) (tested ok)
+        check_full_progress added
+    get_game_links.py
+        function comments added
+        verify_complete added (probably unnecessary)
+        check_full_progress added
+    get_guides.py
+        function comments added
+        split Save_Data creation into multiple lines
+            In the future, i would like to do this more "python-y," use a dictionary instead of random params and fields
+        verify_complete added (probably unnecessary)
+        check_full_progress added
+    html_guide_manager.py
+        added thread breaks
+        split Save_Data creation into multiple lines
+    gui_manager.py
+        most ui elements are now their own var, so i can actually use them (dumbass)
+        visual mostly finalized. looks like shit, but it works. tkinter has been pickier than i thought
+
 Jan 7 2024
     adding a gui! its going ok! it's kinda almost done, and supposed to look kinda iffy,
     but having it there makes it look more real.

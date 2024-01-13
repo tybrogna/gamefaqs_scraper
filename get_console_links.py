@@ -1,3 +1,5 @@
+from threading import Event
+
 from bs4 import BeautifulSoup
 import requests
 
@@ -5,7 +7,17 @@ import scraper_io as io
 import constants
 import progress_data_structures as ds
 
-test = True
+COUNT_LOC = 'get_console_links_count'
+test = False
+kill_event = Event()
+
+
+def kill():
+    kill_event.set()
+
+
+def enliven():
+    kill_event.clear()
 
 
 def get_console_locations_list(soup_consoles):
@@ -35,7 +47,15 @@ def get_console_locations_list(soup_consoles):
     return locations
 
 
-def verify_games_on_page(console_link):
+def verify_games_on_page(console_link: str):
+    """
+    If the parameterized URL leads to a page where there are links to games, return True
+
+    :param console_link: string url of the page to open
+    :return: true if the page opened has games, false otherwise
+    """
+    if kill_event.is_set():
+        return
     console_soup = constants.heat_soup(console_link)
     game_list = console_soup.find_all('td', class_='rtitle')
     if len(game_list) == 0:
@@ -44,15 +64,15 @@ def verify_games_on_page(console_link):
         return True
 
 
-def console_location_to_link(location):
+def console_location_to_link(location: str) -> str:
+    """
+    Wraps parameterized string in the necessary urls to get a gamefaqs console page\n
+    https://gamefaqs.gamespot.com  :location:  /category/999-all
+
+    :param location: console name (ps1, gamecube, amiga)
+    :return: an url that leads to the full list of games for the console
+    """
     return constants.URL_gamefaqs + location + constants.URL_list
-
-
-def get_game_links(soup_page):
-    game_list = soup_page.find_all('td', class_='rtitle')
-    for table_row in game_list:
-        url_game = list(table_row.children)[0].get('href')
-        print(url_game)
 
 
 def get_locations_from_confirmed_link(confirmed_link):
@@ -61,51 +81,62 @@ def get_locations_from_confirmed_link(confirmed_link):
     return confirmed_link[start_idx:end_idx]
 
 
-def run():
-    print("  Scanning all consoles on gamefaqs...")
+def run(GUI):
+    GUI.display('Scanning all consoles on gamefaqs...')
     soup_consoles = constants.heat_soup(constants.URL_gamefaqs + constants.URL_consoles)
     console_page_all_locations = get_console_locations_list(soup_consoles)
-
-    if test:
-        print("  locations found")
-        for val in console_page_all_locations:
-            print("    " + val)
-
+    GUI.display('FOUND:')
+    for val in console_page_all_locations:
+        GUI.display('    ' + val)
     console_page_all_links = map(console_location_to_link, console_page_all_locations)
     console_links = list(filter(verify_games_on_page, console_page_all_links))
-
-    if test:
-        print("  confirmed links created")
-        for val in console_links:
-            print("    " + val)
-
-    link_steps = []
+    if kill_event.is_set():
+        print('get console links dying')
+        return False
+    GUI.display('confirmed links created')
+    for val in console_links:
+        GUI.display('    ' + val)
+    io.pkl_append(COUNT_LOC, str(len(console_links)))
     for confirmed_link in console_links:
         name = get_locations_from_confirmed_link(confirmed_link)
-        link_steps.append(ds.Link_Step(name, confirmed_link, False))
-
+        link_step = ds.Link_Step(name, confirmed_link, False)
+        io.pkl_append(constants.CONSOLE_LINK_LIST_LOC, link_step)
+        io.pkl_append(constants.CONSOLE_LINK_FOR_GUIDES, link_step)
+        io.pkl_append(constants.CONSOLE_DL_LIST_LOC, link_step)
+    GUI.display('Console Links Saved!!')
     if test:
-        for ls in link_steps:
-            print(ls)
-
-    io.pkl_append_all(constants.CONSOLE_LINK_LIST_LOC, link_steps)
-    io.pkl_append_all(constants.CONSOLE_DL_LIST_LOC, link_steps)
-    # fake_list = [("link1", False),("link2", False),("link3", False),("link4", False),("link5", False)]
-    # io.append_all_to_pkl(step, fake_list)
-    print("  Console Links Saved!!")
+        io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
     return True
 
 
-def print_progress():
-    if not io.exists(constants.CONSOLE_LINK_LIST_LOC):
-        print('  Console Link Save File not created yet')
-        return
-    pkl_vals: list[ds.Link_Step] = io.unpickle(constants.CONSOLE_LINK_LIST_LOC)
-    num_steps = len(pkl_vals)
-    cur_step = 0
-    for idx, step_val in enumerate(pkl_vals):
-        if step_val.completion:
-            cur_step = idx
-            break
-    print(f'  On step {cur_step} of {num_steps}')
-    print(f'  {pkl_vals[cur_step]}')
+def verify_complete() -> bool:
+    """
+    Style: Ensures the number of consoles found before scraping matches the number of consoles found in
+    CONSOLE_LINK_LIST_LOC.pickle
+    """
+    if not io.pkl_exists(constants.CONSOLE_LINK_LIST_LOC):
+        print('no CONSOLE_LINK_LIST_LOC file')
+        return False
+    if not io.pkl_exists(COUNT_LOC):
+        print('no COUNT_LOC file')
+        return False
+    io.pkl_test_print(COUNT_LOC)
+    num_links = len(io.unpickle(constants.CONSOLE_LINK_LIST_LOC))
+    expected_number = int(io.unpickle(COUNT_LOC)[0])
+    if num_links == expected_number:
+        return True
+    print(f'Saved consoles don\'t match: found {num_links}, expected {expected_number}')
+    return False
+
+
+def check_full_progress() -> list[str]:
+    """
+
+    """
+    if not io.pkl_exists(constants.CONSOLE_LINK_LIST_LOC) or not io.pkl_exists(COUNT_LOC):
+        return ['Console Link Save File not created yet']
+    links = io.unpickle(constants.CONSOLE_LINK_LIST_LOC)
+    num_links = len(links)
+    expected_number = int(io.unpickle(COUNT_LOC)[0])
+    return [f'  On step {num_links} of {expected_number}',
+            f'  Last saved console link: {links[num_links - 1]}']

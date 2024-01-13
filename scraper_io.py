@@ -24,6 +24,11 @@ def setup(override_loc=''):
         os.makedirs(os.path.join(DATA_FOLDER, CSS_LOC))
 
 
+def can_find_save_data(save_loc):
+    if not os.path.exists(save_loc):
+        return False
+    return True
+
 def create_folder(folder_loc):
     if not os.path.exists(folder_loc):
         os.makedirs(folder_loc)

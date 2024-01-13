@@ -5,10 +5,12 @@ from bs4 import BeautifulSoup
 import time
 from progress_data_structures import Save_Data
 from concurrent.futures import ThreadPoolExecutor
+import gui_manager
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36'}
 
 CONSOLE_LINK_LIST_LOC = 'console_link_list'
+CONSOLE_LINK_FOR_GUIDES = 'console_link_list_2'
 GAME_LINK_LIST_LOC = 'console_link_list'
 CONSOLE_DL_LIST_LOC = 'dl_list'
 DL_IMAGES = True
@@ -22,9 +24,9 @@ URL_faqs = "/faqs"
 URL_css = '/a/css'
 
 CONSOLE_EXCLUDE = ['ps2', 'gc', 'xbox', 'game_boy']
+GUI: gui_manager.Gui = None
 
-
-def heat_soup(url) -> BeautifulSoup: 
+def heat_soup(url) -> BeautifulSoup:
     """
     makes a web request of the paramter url, then creates a soup object
 
@@ -32,12 +34,15 @@ def heat_soup(url) -> BeautifulSoup:
     :return: BeautifulSoup html object
     """
     req = requests.get(url, headers=HEADERS)
+    GUI.display(str(req.status_code) + " from " + url)
     print(str(req.status_code) + " from " + url)
+
     return BeautifulSoup(req.text, "html.parser")
 
 
 def url_request_blob(url: str) -> requests.Response:
     req = requests.get(url, headers=HEADERS, stream=True)
+    GUI.display(str(req.status_code) + " from " + url)
     print(str(req.status_code) + " from " + url)
     return req
 
@@ -138,43 +143,3 @@ def __saved_future(save: Save_Data) -> bool:
     else:
         done = io.save_text(save.file_loc, save.blob)
     return done
-
-def force_save(*loc_data):
-    done = []
-    interrupt_count = 0
-    saves_count = 0
-
-    for save_pack in loc_data:
-        if not type(save_pack) is list:
-            print("save failed, wrong types")
-            return
-        if type(save_pack[1]) is int:
-            save_pack[1] = str(save_pack[1])
-        if len(save_pack) > 2:
-            if type(save_pack[2]) is int:
-                save_pack[2] = str(save_pack[2])
-        done.append(False)
-        saves_count = saves_count + 1
-    saves_count = 0
-    all_done = False
-
-    while not all_done:
-        try:
-            time.sleep(.3)
-            save_pack = loc_data[saves_count]
-            if len(save_pack) > 2:
-                done[saves_count] = io.pkl_overwrite(save_pack[0], save_pack[1], save_pack[2])
-            else:
-                done[saves_count] = io.pkl_append_all(save_pack[0], save_pack[1])
-            saves_count = saves_count + 1
-            all_done = True
-            for d in done:
-                all_done = all_done and d
-        except KeyboardInterrupt:
-            if interrupt_count <= 2:
-                print('SAVING PROGRESS, DON\'T INTERRUPT')
-                interrupt_count = interrupt_count + 1
-                continue
-            else:
-                print('Ok fine jeez you got it chief')
-                all_done = True

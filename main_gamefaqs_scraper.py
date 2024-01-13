@@ -1,5 +1,6 @@
 import copy
-import tkinter
+import time
+from threading import Thread
 
 import get_console_links
 import get_game_links
@@ -10,11 +11,7 @@ import progress_data_structures as ds
 import constants
 
 exp_link_check = "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)"
-override_folder_loc = ''
-
-def dummy_func(arg):
-    print('im dum')
-    return
+GUI: gui_manager.Gui = None
 
 
 def remove_console_link():
@@ -27,9 +24,8 @@ def remove_console_link():
 
 
 steps = [
-    ds.Main_Step('get_console_links', constants.CONSOLE_LINK_LIST_LOC, False),
-    # ds.Main_Step('exclude_console_links', remove_console_link),
-    ds.Main_Step('get_game_links', constants.GAME_LINK_LIST_LOC, False),
+    ds.Main_Step('get_console_links', False),
+    ds.Main_Step('get_game_links', False),
     ds.Main_Step('get_guides', False)]
 
 
@@ -43,9 +39,25 @@ def check_progress(step_name):
     # print("checking {0} step".format(step_name))
     return io.pkl_contains_name("progress", step_name).completion
 
+
 def check_full_progress():
-    print('here')
-    return
+    ret_strs = []
+    if not GUI.save_loc.get() or GUI.save_loc.get() == '':
+        GUI.display('No save location specified in the box')
+        return
+    save_folder_loc = GUI.save_loc.get()
+    if not io.can_find_save_data(save_folder_loc):
+        GUI.display(f'No Scraper Save Data found at {save_folder_loc}')
+        return
+
+    for idx, step in enumerate(steps):
+        res = globals()[step.name].check_full_progress()
+        if res:
+            ret_strs.append(f'============  STEP {idx} OF {len(steps)}: {step.name}  ============')
+            ret_strs.extend(res)
+            ret_strs.append('\n')
+    GUI.display(*ret_strs)
+
 
 def update_progress(step, completion):
     new_step = copy.deepcopy(step)
@@ -57,24 +69,73 @@ def run_db():
     io.setup('ha')
 
 
+def run_a_thread():
+    GUI.display(f'Starting...')
+    override_folder_loc = ''
+    if GUI.save_loc.get():
+        override_folder_loc = GUI.save_loc.get()
+    io.setup(override_folder_loc)
+    create_progress_file()
+    GUI.display('did the normal stuff')
+    # global worker
+    # global kill_threads
+    # kill_threads = False
+    # worker = Thread(target=globals()[steps[0].name].run, args=(GUI,))
+    # GUI.display('thread start nao')
+    # input('shfse')
+    # worker.start()
+    # GUI.display('thread running')
+    # while worker.is_alive():
+    #     time.sleep(.1)
+    # GUI.display('thread finished')
+
+
+def stop_a_thread():
+    print('hello')
+
+
+def kill_step_events():
+    for step in steps:
+        globals()[step.name].kill()
+
+
+def revive_step_events():
+    for step in steps:
+        globals()[step.name].enliven()
+
+
 def run():
+    GUI.disable_buttons()
+    GUI.display(f'Starting...')
+    override_folder_loc = ''
+    if GUI.save_loc.get():
+        override_folder_loc = GUI.save_loc.get()
     io.setup(override_folder_loc)
     create_progress_file()
     try:
         for step in steps:
-            print("checking {0} step".format(step.name))
+            print(f'checking {step.name} step')
             step_complete = check_progress(step.name)
             if step_complete:
-                print("{0} is already complete".format(step.name))
+                print(f'{step.name} is already complete')
                 continue
             else:
-                print("running {0}".format(step.name))
-                complete = globals()[step.name].run()
-                if complete:
+                print(f'running {step.name}')
+                step_run_func = globals()[step.name].run
+                worker = Thread(target=step_run_func, args=(GUI,))
+                worker.start()
+                time.sleep(.5)
+                while worker.is_alive():
+                    GUI.update()
+                if globals()[step.name].verify_complete():
                     update_progress(step, True)
-                    print("progress updated: {0} => Complete".format(step.name))
+                    GUI.display(f'progress updated: {step.name} => Complete')
                 else:
-                    print("{0} failed".format(step.name))
+                    GUI.display(f'{step.name} failed or ended')
+                    break
+                GUI.display(f'progress updated: {step.name} => Complete')
+        GUI.enable_buttons()
+        revive_step_events()
     except KeyboardInterrupt:
         for step in steps:
             step_complete = check_progress(step.name)
@@ -87,38 +148,19 @@ def run():
                 break
 
 
+def app():
+    global GUI
+    GUI = gui_manager.Gui()
+    GUI.setup(check_full_progress, run, kill_step_events)
+    constants.GUI = GUI
+    GUI.mainloop()
+
+
 def test():
-    print("hello world")
-    io.setup()
-    gui = gui_manager.Gui()
-    gui.setup()
-    # gui.add_button('Check Progress', check_full_progress)
-    # gui.add_button('Start Scraper', run)
-    # gui.add_label('save location')
-    # baloney = tkinter.StringVar()
-    # baloney.set('haha')
-    # gui.add_entry(baloney)
-    gui.mainloop()
-    # globals()['get_console_links'].print_progress()
-    # get_guides.good_shit()
+    io.setup('D:\\gamefaqs')
+    io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
+    print(get_console_links.check_full_progress())
 
-    # io.try_sql()
-
-    # a_list = [1,2,3]
-    # b_list = [4,5,a_list]
-
-    # copy_step = copy.deepcopy(steps[0])
-    # copy_step.name = "im a clone"
-    # print(steps[0])
-    # print(copy_step)
-
-    # if not os.path.exists(data_location):
-    #     print("Creating data folder")
-    #     os.makedirs('data')
-
-    # io.test_print_pkl("3ds_game_list")
-    # io.test_print_pkl(steps[0].save_loc)
-
-test()
-# run()
+# test()
+app()
 # run_db()

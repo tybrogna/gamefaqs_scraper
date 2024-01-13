@@ -1,12 +1,16 @@
 import re
-
 import os
+from threading import Event
+
 import constants
 import scraper_io as io
 import progress_data_structures as ds
 from concurrent.futures import ThreadPoolExecutor
 from bs4 import BeautifulSoup
 from bs4 import Tag
+
+
+kill_event = Event()
 
 
 def __create_html_guide_step(pkl_name: str, base_url: str, toc_list) -> list[ds.Link_Step]:
@@ -127,6 +131,9 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.Guide_Metadata, base
     :param guide_metadata: non-content guide data
     :param base_url: non-Table of content appended url to the guide
     """
+    if kill_event.is_set():
+        print('html guides dying')
+        return
     page_step_pkl_name = guide_metadata.game[0:3] + guide_metadata.author[0:3] + '_html_steps'
     page_steps: list[ds.Link_Step] = io.unpickle(page_step_pkl_name)
     if not page_steps:
@@ -134,8 +141,10 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.Guide_Metadata, base
         page_steps: list[ds.Link_Step] = __create_html_guide_step(page_step_pkl_name, base_url, toc_link_list)
     # io.pkl_test_print(guide_metadata.game + 'TEST_MODE')
     for step in page_steps:
+        if kill_event.is_set():
+            print('html guides dying')
+            return
         guide_save_pack = []
-        # input("next step...")
         if step.completion:
             print(step)
             continue
@@ -147,10 +156,15 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.Guide_Metadata, base
             guide_save_pack.append(__create_css_save_data(page_soup))
         if constants.DL_IMAGES:
             img_list = __create_image_save_data(page_metadata, page_content)
+            if kill_event.is_set():
+                print('html guides dying')
+                return
             __adjust_image_locations(page_content)
             guide_save_pack.extend(img_list)
         guide_save_pack.append(__create_html_save_data(page_metadata, css_name, page_content))
-        page_progress_data = ds.Save_Data(page_step_pkl_name, step.save_new_completion(), step, True)
-        page_progress_data.file_type = "pickle"
+        page_progress_data = ds.Save_Data(page_step_pkl_name)
+        page_progress_data.old_blob_for_overwrite = step
+        page_progress_data.blob = step.save_new_completion()
+        page_progress_data.file_type = 'pickle'
         guide_save_pack.append(page_progress_data)
         constants.force_save_pack(*guide_save_pack)
