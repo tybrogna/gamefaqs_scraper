@@ -3,7 +3,7 @@ import requests
 import scraper_io as io
 from bs4 import BeautifulSoup
 import time
-from progress_data_structures import Save_Data
+from progress_data_structures import SaveData
 from concurrent.futures import ThreadPoolExecutor
 import gui_manager
 
@@ -63,8 +63,7 @@ def text_after_last_slash(text: str) -> str:
     return ''
 
 
-def force_save_pack_sync(*save_pack: Save_Data):
-    # done = []
+def force_save_pack_sync(*save_pack: SaveData):
     queue_interrupt = False
     interrupt_count = 0
     saves_count = 0
@@ -74,7 +73,6 @@ def force_save_pack_sync(*save_pack: Save_Data):
             save.blob = str(save.blob)
         if type(save.old_blob_for_overwrite) is int:
             save.old_blob_for_overwrite = str(save.old_blob_for_overwrite)
-        # done.append(False)
 
     while saves_count < len(save_pack):
         try:
@@ -109,7 +107,7 @@ def force_save_pack_sync(*save_pack: Save_Data):
         raise KeyboardInterrupt
 
 
-def force_save_pack(*save_pack: Save_Data):
+def force_save_pack(*save_pack: SaveData):
     for save in save_pack:
         save.file_loc = io.__save_in_data(save.file_loc)
         if type(save.blob) is int:
@@ -130,7 +128,7 @@ def force_save_pack(*save_pack: Save_Data):
                 _thread.interrupt_main()
 
 
-def __saved_future(save: Save_Data) -> bool:
+def __saved_future(save: SaveData) -> bool:
     if save.file_type == 'pickle':
         if save.old_blob_for_overwrite is not None:
             done = io.pkl_overwrite(save.file_loc, save.old_blob_for_overwrite, save.blob)

@@ -13,14 +13,16 @@ from bs4 import Tag
 kill_event = Event()
 
 
-def __create_html_guide_step(pkl_name: str, base_url: str, toc_list) -> list[ds.Link_Step]:
+def __create_html_guide_step(pkl_name: str, base_url: str, toc_list) -> list[ds.LinkStep]:
     html_guide_steps = []
     for page_title in toc_list:
         filesystem_name = page_title.text.replace(':', ' -')
         filesystem_name = filesystem_name.replace('/', ', ')
         filesystem_name = filesystem_name.replace('\\', ', ')
         filesystem_name = re.sub('[<>*?"|]', '', filesystem_name)
-        html_guide_steps.append(ds.Link_Step(filesystem_name, base_url + '/' + page_title['href'], False))
+        html_guide_steps.append(ds.LinkStep(name=filesystem_name,
+                                            link=base_url + '/' + page_title['href'],
+                                            completion=False))
     io.pkl_append_all(pkl_name, html_guide_steps)
     return html_guide_steps
 
@@ -33,7 +35,7 @@ def __get_css_name(soup) -> str:
     return constants.text_after_last_slash(tag['href'])
 
 
-def __create_css_save_data(soup: BeautifulSoup) -> ds.Save_Data:
+def __create_css_save_data(soup: BeautifulSoup) -> ds.SaveData:
     """
     Creates a savable data pack for the css marked core_css on the current soup page
 
@@ -44,14 +46,14 @@ def __create_css_save_data(soup: BeautifulSoup) -> ds.Save_Data:
     css_name = constants.text_after_last_slash(tag['href'])
     linked_url = constants.URL_gamefaqs + constants.URL_css + '/' + css_name
     css_name = os.path.join(io.CSS_LOC, css_name)
-    css_sd = ds.Save_Data(css_name)
+    css_sd = ds.SaveData(css_name)
     css_sd.blob = constants.url_request_blob(linked_url).text
     css_sd.file_type = 'css'
     return css_sd
 
 
-def __get_page_metadata(guide_metadata: ds.Guide_Metadata, page_name) -> ds.Page_Metadata:
-    page_metadata = ds.Page_Metadata(guide_metadata.game)
+def __get_page_metadata(guide_metadata: ds.GuideMetadata, page_name) -> ds.PageMetadata:
+    page_metadata = ds.PageMetadata(guide_metadata.game)
     page_metadata.file_save_path = os.path.join(
         f'{guide_metadata.save_title()}',
         f'{page_name}.html')
@@ -61,8 +63,8 @@ def __get_page_metadata(guide_metadata: ds.Guide_Metadata, page_name) -> ds.Page
     return page_metadata
 
 
-def __create_html_save_data(page_metadata: ds.Page_Metadata, css_name: str, page_content)\
-        -> ds.Save_Data:
+def __create_html_save_data(page_metadata: ds.PageMetadata, css_name: str, page_content)\
+        -> ds.SaveData:
     """
     Creates a savable data pack for the full html of the guide
 
@@ -80,13 +82,16 @@ def __create_html_save_data(page_metadata: ds.Page_Metadata, css_name: str, page
     html_blob.append(page_content)
     html_blob.append('</div')
     html_blob.append('</div>')
-    html_save_data = ds.Save_Data(page_metadata.file_save_path)
-    html_save_data.blob = html_blob
-    html_save_data.file_type = 'html'
+    html_save_data = ds.SaveData(file_loc=page_metadata.file_save_path,
+                                 blob=html_blob,
+                                 file_type='html')
+    # html_save_data = ds.SaveData(page_metadata.file_save_path)
+    # html_save_data.blob = html_blob
+    # html_save_data.file_type = 'html'
     return html_save_data
 
 
-def __create_image_save_data(metadata: ds.Page_Metadata, page_content):
+def __create_image_save_data(metadata: ds.PageMetadata, page_content):
     """
     Creates a list of savable data packs for each image found in the page_content
 
@@ -109,10 +114,12 @@ def __create_image_save_data(metadata: ds.Page_Metadata, page_content):
     return save_pack
 
 
-def __request_image_data(img_url, img_save_loc) -> ds.Save_Data:
-    img_save_data = ds.Save_Data(img_save_loc)
-    img_save_data.blob = constants.url_request_blob(img_url)
-    img_save_data.file_type = 'image'
+def __request_image_data(img_url, img_save_loc) -> ds.SaveData:
+    img_save_data = ds.SaveData(file_loc=img_save_loc,
+                                blob=constants.url_request_blob(img_url),
+                                file_type='image')
+    # img_save_data.blob = constants.url_request_blob(img_url)
+    # img_save_data.file_type = 'image'
     return img_save_data
 
 
@@ -123,7 +130,7 @@ def __adjust_image_locations(page_content: Tag):
         img['src'] = 'img/' + img_name
 
 
-def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.Guide_Metadata, base_url: str):
+def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.GuideMetadata, base_url: str):
     """
     Creates list of savable data packs for all the data found on the guide page (html content, images, css)
 
@@ -135,10 +142,10 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.Guide_Metadata, base
         print('html guides dying')
         return
     page_step_pkl_name = guide_metadata.game[0:3] + guide_metadata.author[0:3] + '_html_steps'
-    page_steps: list[ds.Link_Step] = io.unpickle(page_step_pkl_name)
+    page_steps: list[ds.LinkStep] = io.unpickle(page_step_pkl_name)
     if not page_steps:
         toc_link_list = page_soup.select('#faqwrap .ftoc a')
-        page_steps: list[ds.Link_Step] = __create_html_guide_step(page_step_pkl_name, base_url, toc_link_list)
+        page_steps: list[ds.LinkStep] = __create_html_guide_step(page_step_pkl_name, base_url, toc_link_list)
     # io.pkl_test_print(guide_metadata.game + 'TEST_MODE')
     for step in page_steps:
         if kill_event.is_set():
@@ -162,9 +169,12 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.Guide_Metadata, base
             __adjust_image_locations(page_content)
             guide_save_pack.extend(img_list)
         guide_save_pack.append(__create_html_save_data(page_metadata, css_name, page_content))
-        page_progress_data = ds.Save_Data(page_step_pkl_name)
-        page_progress_data.old_blob_for_overwrite = step
-        page_progress_data.blob = step.save_new_completion()
-        page_progress_data.file_type = 'pickle'
+        page_progress_data = ds.SaveData(file_loc=page_step_pkl_name,
+                                         blob=step.save_new_completion(),
+                                         old_blob_for_overwrite=step,
+                                         file_type='pickle')
+        # page_progress_data.old_blob_for_overwrite = step
+        # page_progress_data.blob = step.save_new_completion()
+        # page_progress_data.file_type = 'pickle'
         guide_save_pack.append(page_progress_data)
         constants.force_save_pack(*guide_save_pack)

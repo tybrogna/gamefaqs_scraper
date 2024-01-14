@@ -6,8 +6,8 @@ import constants
 import progress_data_structures as ds
 from bs4 import BeautifulSoup
 
-type Link_Step_List = list[ds.Link_Step]
-type Save_Pack = list[ds.Save_Data]
+type Link_Step_List = list[ds.LinkStep]
+type Save_Pack = list[ds.SaveData]
 kill_event = Event()
 
 
@@ -21,7 +21,7 @@ def enliven():
     html_guide_manager.kill_event.clear()
 
 
-def create_console_steps(consoles_loc: str) -> list[ds.File_Step]:
+def create_console_steps(consoles_loc: str) -> list[ds.FileStep]:
     """
     the results of get_console_links.py  becomes the steps toward completion of get_guides.py.
     For each console found in the pickled parameter, a game step will be created in the returned list
@@ -32,11 +32,14 @@ def create_console_steps(consoles_loc: str) -> list[ds.File_Step]:
     steps = []
     console_link_steps = io.unpickle(consoles_loc)
     for console in console_link_steps:
-        steps.append(ds.File_Step(console.name, console.link, "{0}_game_list".format(console.name), console.completion))
+        steps.append(ds.FileStep(name=console.name,
+                                 link=console.link,
+                                 save_loc="{0}_game_list".format(console.name),
+                                 completion=console.completion))
     return steps
 
 
-def create_game_steps(game_list_loc: str) -> list[ds.File_Step]:
+def create_game_steps(game_list_loc: str) -> list[ds.FileStep]:
     """
     the results of get_game_links.py  becomes the steps toward completion of get_guides.py.
     For each game found in the pickled parameter, a step will be created in the returned list
@@ -47,7 +50,10 @@ def create_game_steps(game_list_loc: str) -> list[ds.File_Step]:
     steps = []
     game_link_steps = io.unpickle(game_list_loc)
     for game in game_link_steps:
-        steps.append(ds.File_Step(game.name, game.link, game.name + '/', game.completion))
+        steps.append(ds.FileStep(name=game.name,
+                                 link=game.link,
+                                 save_loc=game.name + '/',
+                                 completion=game.completion))
     return steps
 
 
@@ -59,7 +65,7 @@ def get_all_guide_links(page_soup):
 
 
 def get_guide_metadata(page_soup):
-    guide_metadata = ds.Guide_Metadata()
+    guide_metadata = ds.GuideMetadata()
     guide_metadata.game = page_soup.select_one('.platform-title :first-child').string
     guide_metadata.game = guide_metadata.game[:guide_metadata.game.rindex(' ')]
     title_and_author = page_soup.select_one('div.ffaq h2').get_text()
@@ -97,11 +103,15 @@ def create_alias_save_data(alias_url_list):
         id_found = io.pkl_contains_name(f'{alias_console}_game_list', alias_game_id)
         if id_found:
             file_loc = f'{alias_console}_game_list'
-            old_step = ds.Link_Step(alias_game_id, alias_link, False)
-            alias_sd = ds.Save_Data(file_loc)
-            alias_sd.blob = old_step.save_new_completion()
-            alias_sd.old_blob_for_overwrite = old_step
-            alias_sd.file_type = 'pickle'
+            old_step = ds.LinkStep(name=alias_game_id, link=alias_link, completion=False)
+            alias_sd = ds.SaveData(file_loc=file_loc,
+                                   blob=old_step.save_new_completion(),
+                                   old_blob_for_overwrite=old_step,
+                                   file_type='pickle')
+            # alias_sd = ds.SaveData(file_loc)
+            # alias_sd.blob = old_step.save_new_completion()
+            # alias_sd.old_blob_for_overwrite = old_step
+            # alias_sd.file_type = 'pickle'
             alias_sd_list.append(alias_sd)
     return alias_sd_list
 
@@ -112,20 +122,20 @@ def get_guide_text(page_soup):
     if guide_text is not None:
         for gt in guide_text:
             guide_text_list.append(gt.contents)
-    new_save = ds.Save_Data()
-    new_save.blob = guide_text_list
-    new_save.file_type = 'text'
+    new_save = ds.SaveData(blob=guide_text_list, file_type='text')
+    # new_save.blob = guide_text_list
+    # new_save.file_type = 'text'
     return new_save
 
 
-def create_dl_steps(game_id, guide_links) -> list[ds.Link_Step]:
+def create_dl_steps(game_id, guide_links) -> list[ds.LinkStep]:
     if io.exists(game_id):
         return io.unpickle(game_id)
     guide_dl_steps = []
     for guide_link in guide_links:
         href = guide_link['href']
         gl_name = href[href.rindex('/') + 1:]
-        guide_dl_steps.append(ds.Link_Step(gl_name, href, False))
+        guide_dl_steps.append(ds.LinkStep(name=gl_name, link=href, completion=False))
     io.pkl_append_all(game_id, guide_dl_steps)
     return guide_dl_steps
 
@@ -163,28 +173,37 @@ def run():
                 guide_soup = constants.heat_soup(guide_url)
                 is_guide = guide_soup.select_one('div.ffaq') is not None
                 if not is_guide:
-                    guide_progress_data = ds.Save_Data(game.name)
-                    guide_progress_data.blob = guide.save_new_completion()
-                    guide_progress_data.old_blob_for_overwrite = guide
-                    guide_progress_data.file_type = 'pickle'
+                    guide_progress_data = ds.SaveData(file_loc=game.name,
+                                                      blob=guide.save_new_completion(),
+                                                      old_blob_for_overwrite=guide,
+                                                      file_type='pickle')
+                    # guide_progress_data.blob = guide.save_new_completion()
+                    # guide_progress_data.old_blob_for_overwrite = guide
+                    # guide_progress_data.file_type = 'pickle'
                     constants.force_save_pack(guide_progress_data)
                     continue
                 guide_metadata = get_guide_metadata(guide_soup)
                 alias_data_list = create_alias_save_data(alias_url_list)
-                guide_progress_data = ds.Save_Data(game.name)
-                guide_progress_data.blob = guide
-                guide_progress_data.old_blob_for_overwrite = guide.save_new_completion()
-                guide_progress_data.file_type = 'pickle'
+                guide_progress_data = ds.SaveData(file_loc=game.name,
+                                                  blob=guide.save_new_completion(),
+                                                  old_blob_for_overwrite=guide,
+                                                  file_type='pickle')
+                # guide_progress_data.blob = guide
+                # guide_progress_data.old_blob_for_overwrite = guide.save_new_completion()
+                # guide_progress_data.file_type = 'pickle'
                 if guide_metadata.html:
                     html_guide_manager.save_guide(guide_soup, guide_metadata, guide_url)
                     constants.force_save_pack(guide_progress_data, *alias_data_list)
                 else:
                     guide_data = get_guide_text(guide_soup)
                     guide_data.file_loc = guide_metadata.save_title()
-                    guide_progress_data = ds.Save_Data(game.name)
-                    guide_progress_data.blob = guide.save_new_completion()
-                    guide_progress_data.old_blob_for_overwrite = guide
-                    guide_progress_data.file_type = 'pickle'
+                    guide_progress_data = ds.SaveData(file_loc=game.name,
+                                                      blob=guide.save_new_completion(),
+                                                      old_blob_for_overwrite=guide,
+                                                      file_type='pickle')
+                    # guide_progress_data.blob = guide.save_new_completion()
+                    # guide_progress_data.old_blob_for_overwrite = guide
+                    # guide_progress_data.file_type = 'pickle'
                     constants.force_save_pack(guide_data, guide_progress_data, *alias_data_list)
 
 

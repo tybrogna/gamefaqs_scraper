@@ -19,7 +19,7 @@ def enliven():
     kill_event.clear()
 
 
-def create_file_steps(console_links_file: str) -> list[ds.File_Step]:
+def create_file_steps(console_links_file: str) -> list[ds.FileStep]:
     """
     The results of get_console_links.py becomes the steps toward completion for get_game_links.py.
     For each console found in the parameter, a step will be created in the returned list
@@ -32,7 +32,11 @@ def create_file_steps(console_links_file: str) -> list[ds.File_Step]:
     for console in console_link_steps:
         if test:
             print("get_game_links.py - adding {0} to steps".format(console.name))
-        steps.append(ds.File_Step(console.name, console.link, "{0}_game_list".format(console.name), console.completion))
+        # steps.append(ds.File_Step(console.name, console.link, "{0}_game_list".format(console.name), console.completion))
+        steps.append(ds.FileStep(name=console.name,
+                                 link=console.link,
+                                 save_loc="{0}_game_list".format(console.name),
+                                 completion=console.completion))
     return steps
 
 
@@ -113,17 +117,24 @@ def run(GUI):
             GUI.display(f'Scraping page {page_at} of {url_pg}')
             if test:
                 if int(page_at) > 1:
-                    finished_step = ds.File_Step(console_step.name, console_step.link, console_step.save_loc, True)
+                    finished_step = ds.FileStep(name=console_step.name,
+                                                link=console_step.link,
+                                                save_loc=console_step.save_loc,
+                                                completion=True)
                     io.pkl_overwrite(constants.CONSOLE_LINK_LIST_LOC, console_step, finished_step)
                     io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
             html_soup = constants.heat_soup(url_pg)
             if not page_contains_games(html_soup):
                 io.pkl_delete(page_file_loc)
                 # finished_step = ds.File_Step(console_step.name, console_step.link, console_step.save_loc, True)
-                save_data = ds.Save_Data(constants.CONSOLE_LINK_LIST_LOC)
-                save_data.blob = console_step.save_new_completion()
-                save_data.old_blob_for_overwrite = console_step
-                save_data.file_type = 'pickle'
+                save_data = ds.SaveData(file_loc=constants.CONSOLE_LINK_LIST_LOC,
+                                        blob=console_step.save_new_completion(),
+                                        old_blob_for_overwrite=console_step,
+                                        file_type='pickle')
+                # save_data = ds.SaveData(constants.CONSOLE_LINK_LIST_LOC)
+                # save_data.blob = console_step.save_new_completion()
+                # save_data.old_blob_for_overwrite = console_step
+                # save_data.file_type = 'pickle'
                 constants.force_save_pack(save_data)
                 # io.pkl_overwrite(constants.CONSOLE_LINK_LIST_LOC, console_step, finished_step)
                 break
@@ -132,16 +143,23 @@ def run(GUI):
             for link in guide_links:
                 guide_remove_console = link['href'][len(console_step.name) + 2:-4]
                 guide_name = guide_remove_console[:guide_remove_console.index('-')]
-                guide_link_steps.append(ds.Link_Step(guide_name, guide_remove_console, False))
+                guide_link_steps.append(ds.LinkStep(name=guide_name, link=guide_remove_console, completion=False))
                 if test:
                     print(guide_link_steps[-1])
-            save_data = ds.Save_Data(console_step.save_loc)
-            save_data.blob = guide_link_steps
-            save_data.file_type = 'pickle'
-            save_page = ds.Save_Data(page_file_loc)
-            save_page.blob = int(page_at) + 1
-            save_data.old_blob_for_overwrite = page_at
-            save_data.file_type = 'pickle'
+            save_data = ds.SaveData(file_loc=console_step.save_loc,
+                                    blob=guide_link_steps,
+                                    file_type='pickle')
+            # save_data = ds.SaveData(console_step.save_loc)
+            # save_data.blob = guide_link_steps
+            # save_data.file_type = 'pickle'
+            save_page = ds.SaveData(file_loc=page_file_loc,
+                                    blob=int(page_at) + 1,
+                                    old_blob_for_overwrite=page_at,
+                                    file_type='pickle')
+            # save_page = ds.SaveData(page_file_loc)
+            # save_page.blob = int(page_at) + 1
+            # save_data.old_blob_for_overwrite = page_at
+            # save_data.file_type = 'pickle'
             GUI.display(f'  Saving {len(guide_link_steps)} game links...')
             constants.force_save_pack(save_data, save_page)
 

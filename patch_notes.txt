@@ -1,3 +1,15 @@
+Jan 13 2024
+    General
+        Removed the underscore from class names (im delaying real work)
+    progress_data_structures.py
+        more comments
+    main_gamefaqs_scraper.py
+        progress file now actually does something
+    Notes
+        I figured out how Keyword Parameters work (sorta)
+        adjusted all of my annoying magic param functions to be more Keywordy (python is back on my good side)
+
+
 Jan 12 2024
     General
         GUI.display added throughout the codebase, displays info to the UI

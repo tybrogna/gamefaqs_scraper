@@ -13,6 +13,11 @@ import constants
 exp_link_check = "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)"
 GUI: gui_manager.Gui = None
 
+default_steps = [
+    ds.MainStep('get_console_links', False),
+    ds.MainStep('get_game_links', False),
+    ds.MainStep('get_guides', False)]
+
 
 def remove_console_link():
     for name in constants.CONSOLE_EXCLUDE:
@@ -23,16 +28,11 @@ def remove_console_link():
             io.pkl_overwrite(constants.CONSOLE_LINK_LIST_LOC, saved_name, finish_step)
 
 
-steps = [
-    ds.Main_Step('get_console_links', False),
-    ds.Main_Step('get_game_links', False),
-    ds.Main_Step('get_guides', False)]
-
-
-def create_progress_file():
-    if not io.pkl_exists("progress"):
-        for step in steps:
-            io.pkl_append("progress", step)
+def get_progress_steps() -> list[ds.MainStep]:
+    if not io.pkl_exists('progress'):
+        for step in default_steps:
+            io.pkl_append('progress', step)
+    return io.unpickle('progress')
 
 
 def check_progress(step_name):
@@ -46,9 +46,14 @@ def check_full_progress():
         GUI.display('No save location specified in the box')
         return
     save_folder_loc = GUI.save_loc.get()
-    if not io.can_find_save_data(save_folder_loc):
+    if not io.path_exists(save_folder_loc):
+        GUI.display(f'{save_folder_loc} doesn\'t exist')
+        return
+    io.setup(save_folder_loc)
+    if not io.pkl_exists('progress'):
         GUI.display(f'No Scraper Save Data found at {save_folder_loc}')
         return
+    steps = get_progress_steps()
 
     for idx, step in enumerate(steps):
         res = globals()[step.name].check_full_progress()
@@ -75,7 +80,7 @@ def run_a_thread():
     if GUI.save_loc.get():
         override_folder_loc = GUI.save_loc.get()
     io.setup(override_folder_loc)
-    create_progress_file()
+    get_progress_steps()
     GUI.display('did the normal stuff')
     # global worker
     # global kill_threads
@@ -95,12 +100,12 @@ def stop_a_thread():
 
 
 def kill_step_events():
-    for step in steps:
+    for step in default_steps:
         globals()[step.name].kill()
 
 
 def revive_step_events():
-    for step in steps:
+    for step in default_steps:
         globals()[step.name].enliven()
 
 
@@ -111,7 +116,9 @@ def run():
     if GUI.save_loc.get():
         override_folder_loc = GUI.save_loc.get()
     io.setup(override_folder_loc)
-    create_progress_file()
+    io.create_folders()
+    steps = get_progress_steps()
+    #TODO actually make app read in progress file
     try:
         for step in steps:
             print(f'checking {step.name} step')
@@ -155,11 +162,27 @@ def app():
     constants.GUI = GUI
     GUI.mainloop()
 
-
+import random
+import time
 def test():
-    io.setup('D:\\gamefaqs')
-    io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
-    print(get_console_links.check_full_progress())
+    # nl = [''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=5)) for n in range(100000)]
+    # locl = ['C:\\'.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=8)) for n in range(100000)]
+    # linl = ['https://www.'.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=35)).join('.com') for n in range(100000)]
+    # sl = []
+    # st = time.time()
+    # for x in range(100000):
+    #     sl.append(ds.FileStep(name=nl[x], link=linl[x], save_loc=locl[x]))
+    # print("--- %s seconds ---" % (time.time() - st))
+    save_data = ds.SaveData(file_type='pickle',
+                            file_loc=constants.CONSOLE_LINK_LIST_LOC,
+                            blob='hehe',)
+    print(save_data)
+    # io.setup('D:\\gamefaqs')
+    # options_dict = {'name':'ahah', 'save_loc':'c drive', 'completion':True}
+    # print(ds.FileStep(name='something'))
+    # print(ds.FileStep(**options_dict))
+    # io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
+    # print(get_console_links.check_full_progress())
 
 # test()
 app()

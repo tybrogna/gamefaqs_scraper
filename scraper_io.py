@@ -18,16 +18,24 @@ def setup(override_loc=''):
         DATA_FOLDER = override_loc
     ABSOLUTE_PATH = os.path.dirname(os.path.abspath(DATA_FOLDER))
     ABSOLUTE_PATH = os.path.join(ABSOLUTE_PATH, DATA_FOLDER)
+    # if not os.path.exists(ABSOLUTE_PATH):
+    #     os.makedirs(ABSOLUTE_PATH)
+    # if not os.path.exists(os.path.join(DATA_FOLDER, CSS_LOC)):
+    #     os.makedirs(os.path.join(DATA_FOLDER, CSS_LOC))
+
+
+def create_folders():
     if not os.path.exists(ABSOLUTE_PATH):
         os.makedirs(ABSOLUTE_PATH)
     if not os.path.exists(os.path.join(DATA_FOLDER, CSS_LOC)):
         os.makedirs(os.path.join(DATA_FOLDER, CSS_LOC))
 
 
-def can_find_save_data(save_loc):
+def path_exists(save_loc):
     if not os.path.exists(save_loc):
         return False
     return True
+
 
 def create_folder(folder_loc):
     if not os.path.exists(folder_loc):

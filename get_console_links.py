@@ -99,7 +99,7 @@ def run(GUI):
     io.pkl_append(COUNT_LOC, str(len(console_links)))
     for confirmed_link in console_links:
         name = get_locations_from_confirmed_link(confirmed_link)
-        link_step = ds.Link_Step(name, confirmed_link, False)
+        link_step = ds.LinkStep(name, link=confirmed_link, completion=False)
         io.pkl_append(constants.CONSOLE_LINK_LIST_LOC, link_step)
         io.pkl_append(constants.CONSOLE_LINK_FOR_GUIDES, link_step)
         io.pkl_append(constants.CONSOLE_DL_LIST_LOC, link_step)
