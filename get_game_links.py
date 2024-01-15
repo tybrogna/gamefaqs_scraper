@@ -40,23 +40,21 @@ def create_file_steps(console_links_file: str) -> list[ds.FileStep]:
     return steps
 
 
-def create_console_progress_files(step_name: str, console_save_loc: str):
+def create_console_progress_files(step_page_at: str, console_save_loc: str):
     """
     Generates a pickle file that keeps track of the number of pages the scraper has scanned so far.
     On a console's "all games" page, only 100 games are displayed. If the app is closed or stopped,
     this file will tell it which page of games to start at after reload
 
-    :param step_name: console name (ps2, gamecube, amiga)
+    :param step_page_at: console name (ps2, gamecube, amiga)
     :param console_save_loc: pickle file location
     """
-    page_search_save_file = step_name + "_page_at"
-    if not io.pkl_exists(page_search_save_file):
-        io.pkl_append(page_search_save_file, '0')
+    if not io.pkl_exists(step_page_at):
+        io.pkl_append(step_page_at, '0')
 
-    first_game_save = console_save_loc
-    if not io.pkl_exists(first_game_save):
+    if not io.pkl_exists(console_save_loc):
         # print("  No Game Link Progress file found, creating Game Link Progress file")
-        io.pkl_create_file(first_game_save)
+        io.pkl_create_file(console_save_loc)
 
 
 def create_page_url(console_name: str, pg_at: str) -> str:
@@ -74,6 +72,12 @@ def create_page_url(console_name: str, pg_at: str) -> str:
     else:
         return ret_url + constants.URL_page + pg_at
 
+
+def get_table_size(console_name):
+    paginators: list[ds.NamedNumber] = io.unpickle(constants.CONSOLE_PAGE_LENGTHS)
+    for pgs in paginators:
+        if pgs.name == console_name:
+            return int(pgs.data)
 
 def page_contains_games(page_soup: BeautifulSoup) -> bool:
     """
@@ -106,17 +110,18 @@ def run(GUI):
             GUI.display(f'  {console_step.name} is done')
             continue
         GUI.display(f'Starting {console_step.name}')
-        create_console_progress_files(console_step.name, console_step.save_loc)
         page_file_loc = console_step.name + '_page_at'
+        last_page = get_table_size(console_step.name)
+        create_console_progress_files(page_file_loc, console_step.save_loc)
         GUI.display(f'Found Link Save File at {console_step.save_loc}')
-        while True:
+        start_page = int(io.unpickle(page_file_loc)[0])
+        for page_at in range(start_page, last_page):
             if kill_event.is_set():
                 return
-            page_at = io.unpickle(page_file_loc)[0]
-            url_pg = create_page_url(console_step.name, page_at)
+            url_pg = create_page_url(console_step.name, str(page_at))
             GUI.display(f'Scraping page {page_at} of {url_pg}')
             if test:
-                if int(page_at) > 1:
+                if page_at > 1:
                     finished_step = ds.FileStep(name=console_step.name,
                                                 link=console_step.link,
                                                 save_loc=console_step.save_loc,
@@ -124,20 +129,6 @@ def run(GUI):
                     io.pkl_overwrite(constants.CONSOLE_LINK_LIST_LOC, console_step, finished_step)
                     io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
             html_soup = constants.heat_soup(url_pg)
-            if not page_contains_games(html_soup):
-                io.pkl_delete(page_file_loc)
-                # finished_step = ds.File_Step(console_step.name, console_step.link, console_step.save_loc, True)
-                save_data = ds.SaveData(file_loc=constants.CONSOLE_LINK_LIST_LOC,
-                                        blob=console_step.save_new_completion(),
-                                        old_blob_for_overwrite=console_step,
-                                        file_type='pickle')
-                # save_data = ds.SaveData(constants.CONSOLE_LINK_LIST_LOC)
-                # save_data.blob = console_step.save_new_completion()
-                # save_data.old_blob_for_overwrite = console_step
-                # save_data.file_type = 'pickle'
-                constants.force_save_pack(save_data)
-                # io.pkl_overwrite(constants.CONSOLE_LINK_LIST_LOC, console_step, finished_step)
-                break
             guide_links = get_all_game_id_and_name(html_soup)
             guide_link_steps = []
             for link in guide_links:
@@ -149,19 +140,18 @@ def run(GUI):
             save_data = ds.SaveData(file_loc=console_step.save_loc,
                                     blob=guide_link_steps,
                                     file_type='pickle')
-            # save_data = ds.SaveData(console_step.save_loc)
-            # save_data.blob = guide_link_steps
-            # save_data.file_type = 'pickle'
             save_page = ds.SaveData(file_loc=page_file_loc,
-                                    blob=int(page_at) + 1,
+                                    blob=str(page_at + 1),
                                     old_blob_for_overwrite=page_at,
                                     file_type='pickle')
-            # save_page = ds.SaveData(page_file_loc)
-            # save_page.blob = int(page_at) + 1
-            # save_data.old_blob_for_overwrite = page_at
-            # save_data.file_type = 'pickle'
             GUI.display(f'  Saving {len(guide_link_steps)} game links...')
             constants.force_save_pack(save_data, save_page)
+        io.pkl_delete(page_file_loc)
+        save_data = ds.SaveData(file_loc=constants.CONSOLE_LINK_LIST_LOC,
+                                blob=console_step.save_new_completion(),
+                                old_blob_for_overwrite=console_step,
+                                file_type='pickle')
+        constants.force_save_pack(save_data)
 
 
 def verify_complete() -> bool:
@@ -191,13 +181,25 @@ def print_progress():
 
 
 def check_full_progress() -> list[str]:
-    if not io.exists(constants.CONSOLE_LINK_LIST_LOC):
-        return ['CONSOLE_LINK_LIST_LOC doesn\'t exist']
+    if not io.pkl_exists(constants.CONSOLE_LINK_LIST_LOC):
+        return ['Console Link Save File, doesn\'t exist, not started']
     steps = io.unpickle(constants.CONSOLE_LINK_LIST_LOC)
+    if len(steps) == 0:
+        return ['No Links in the Console Link Save File, not finished or not started']
     num_steps = len(steps)
     cur_step = 0
     for idx, step in enumerate(steps):
         if not step.completion:
             cur_step = idx
             break
-    return [f'On step {cur_step} ({steps[cur_step].name}) of {num_steps}']
+    ret_strs: list[str] = [f'On step {cur_step} ({steps[cur_step].name}) of {num_steps}']
+    if not io.pkl_exists(steps[cur_step].name + '_page_at'):
+        ret_strs.append(f'No game pages scanned yet')
+        return ret_strs
+    pg_at = io.unpickle(steps[cur_step].name + '_page_at')[0]
+    ret_strs.append(f'On page {pg_at}')
+    if not io.pkl_exists(steps[cur_step].name + '_game_list'):
+        ret_strs.append(f'No game links found yet')
+    num_games_saved = len(io.unpickle(steps[cur_step].name + '_game_list'))
+    ret_strs.append(f'{num_games_saved} game links found so far')
+    return ret_strs

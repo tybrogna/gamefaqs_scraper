@@ -78,6 +78,17 @@ class LinkStep(SaveName):
         return f'Link Step {self.name} \n    {self.link}, {"Finished" if self.completion else "Incomplete"}'
 
 
+class NamedNumber:
+    def __init__(self, name, data=0):
+        self.name = name
+        self.data = data
+
+    def __eq__(self, other):
+        if not isinstance(other, LinkStep):
+            return NotImplemented
+        return self.name == other.name
+
+
 class GuideMetadata:
     def __init__(self):
         self.game = ''

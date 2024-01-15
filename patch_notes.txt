@@ -1,3 +1,21 @@
+Jan 14 2024
+    Today while testing (the longest test I ever conducted), I gamefaqs hit me with a "suspicious activity" page.
+    Instead of elation at the progress made or that i was finally using the scraper at the pace and
+    intention that it was designed forI am at the point where im very frustrated with what im doing. I hate
+    my design. The longer i work on this, the more glaring the flaws become, and the past three days have
+    been centered around fixing or mitigating some of them. I started this project to get a job in python,
+    and yet I have no job, a poorly designed app, and staring at another form of rejection from
+    www.gamefaqs.gamespot.com...the spell has ended. I'll probably continue this fool's errand, but it hurts
+    more now.
+    constants.py
+        adding more user headers and a random timer between 13 and 30 seconds to all requests,
+        in an attempt to dodge the scraper detectors
+    get_console_links.py
+        replaced run function, now saves progress and failure resilient
+        saves pagination number for game tables to be used in get_game_links.py
+    scraper_io.py
+        added pkl_save_new(), unpickle_dict() because i did not understand how pickling worked when i wrote this file
+
 Jan 13 2024
     General
         Removed the underscore from class names (im delaying real work)

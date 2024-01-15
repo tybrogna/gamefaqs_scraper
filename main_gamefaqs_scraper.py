@@ -58,7 +58,7 @@ def check_full_progress():
     for idx, step in enumerate(steps):
         res = globals()[step.name].check_full_progress()
         if res:
-            ret_strs.append(f'============  STEP {idx} OF {len(steps)}: {step.name}  ============')
+            ret_strs.append(f'============  STEP {idx + 1} OF {len(steps)}: {step.name}  ============')
             ret_strs.extend(res)
             ret_strs.append('\n')
     GUI.display(*ret_strs)
@@ -162,9 +162,13 @@ def app():
     constants.GUI = GUI
     GUI.mainloop()
 
-import random
-import time
 def test():
+    io.pkl_test_print('D:\\gamefaqs\\android_page_at')
+    io.pkl_test_print('D:\\gamefaqs\\3ds_page_at')
+    # soup = constants.heat_soup('https://gamefaqs.gamespot.com/3ds/category/999-all')
+    # all_txt = soup.select_one('.paginate li').text
+    # final_pg = all_txt[all_txt.rindex(' '):].strip()
+    # print(final_pg)
     # nl = [''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=5)) for n in range(100000)]
     # locl = ['C:\\'.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=8)) for n in range(100000)]
     # linl = ['https://www.'.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=35)).join('.com') for n in range(100000)]
@@ -173,10 +177,10 @@ def test():
     # for x in range(100000):
     #     sl.append(ds.FileStep(name=nl[x], link=linl[x], save_loc=locl[x]))
     # print("--- %s seconds ---" % (time.time() - st))
-    save_data = ds.SaveData(file_type='pickle',
-                            file_loc=constants.CONSOLE_LINK_LIST_LOC,
-                            blob='hehe',)
-    print(save_data)
+    # save_data = ds.SaveData(file_type='pickle',
+    #                         file_loc=constants.CONSOLE_LINK_LIST_LOC,
+    #                         blob='hehe',)
+    # print(save_data)
     # io.setup('D:\\gamefaqs')
     # options_dict = {'name':'ahah', 'save_loc':'c drive', 'completion':True}
     # print(ds.FileStep(name='something'))
@@ -184,6 +188,6 @@ def test():
     # io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
     # print(get_console_links.check_full_progress())
 
-# test()
-app()
+test()
+# app()
 # run_db()

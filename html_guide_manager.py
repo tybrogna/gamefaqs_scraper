@@ -85,9 +85,6 @@ def __create_html_save_data(page_metadata: ds.PageMetadata, css_name: str, page_
     html_save_data = ds.SaveData(file_loc=page_metadata.file_save_path,
                                  blob=html_blob,
                                  file_type='html')
-    # html_save_data = ds.SaveData(page_metadata.file_save_path)
-    # html_save_data.blob = html_blob
-    # html_save_data.file_type = 'html'
     return html_save_data
 
 
@@ -118,8 +115,6 @@ def __request_image_data(img_url, img_save_loc) -> ds.SaveData:
     img_save_data = ds.SaveData(file_loc=img_save_loc,
                                 blob=constants.url_request_blob(img_url),
                                 file_type='image')
-    # img_save_data.blob = constants.url_request_blob(img_url)
-    # img_save_data.file_type = 'image'
     return img_save_data
 
 

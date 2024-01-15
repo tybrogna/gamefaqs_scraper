@@ -96,6 +96,15 @@ def __atomize(file_loc, file_data):
             write_file.write(bin_data)
 
 
+def pkl_save_new(file_loc, file_data):
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
+    with atom(file_loc, mode='wb', overwrite=True) as write_file:
+        bin_data = pickle.dumps(file_data)
+        write_file.write(bin_data)
+    return True
+
+
 def pkl_overwrite(file_loc, old_data, new_data):
     """
     replaces old_data with new_data in a pickle at file_loc
@@ -210,6 +219,18 @@ def pkl_contains_name(file_loc, name):
                     return next_line
             except EOFError:
                 break
+
+
+def unpickle_dict(file_loc):
+    file_loc = __becomes_pickle(file_loc)
+    file_loc = __save_in_data(file_loc)
+    if not os.path.exists(file_loc) or os.stat(file_loc).st_size == 0:
+        create_file(file_loc)
+        return []
+    read_file = open(file_loc, "rb+")
+    file_data = pickle.load(read_file)
+    read_file.close()
+    return file_data
 
 
 def unpickle(file_loc):

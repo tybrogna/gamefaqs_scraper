@@ -177,9 +177,6 @@ def run():
                                                       blob=guide.save_new_completion(),
                                                       old_blob_for_overwrite=guide,
                                                       file_type='pickle')
-                    # guide_progress_data.blob = guide.save_new_completion()
-                    # guide_progress_data.old_blob_for_overwrite = guide
-                    # guide_progress_data.file_type = 'pickle'
                     constants.force_save_pack(guide_progress_data)
                     continue
                 guide_metadata = get_guide_metadata(guide_soup)
@@ -188,9 +185,6 @@ def run():
                                                   blob=guide.save_new_completion(),
                                                   old_blob_for_overwrite=guide,
                                                   file_type='pickle')
-                # guide_progress_data.blob = guide
-                # guide_progress_data.old_blob_for_overwrite = guide.save_new_completion()
-                # guide_progress_data.file_type = 'pickle'
                 if guide_metadata.html:
                     html_guide_manager.save_guide(guide_soup, guide_metadata, guide_url)
                     constants.force_save_pack(guide_progress_data, *alias_data_list)
@@ -201,9 +195,6 @@ def run():
                                                       blob=guide.save_new_completion(),
                                                       old_blob_for_overwrite=guide,
                                                       file_type='pickle')
-                    # guide_progress_data.blob = guide.save_new_completion()
-                    # guide_progress_data.old_blob_for_overwrite = guide
-                    # guide_progress_data.file_type = 'pickle'
                     constants.force_save_pack(guide_data, guide_progress_data, *alias_data_list)
 
 
@@ -220,7 +211,7 @@ def verify_completion():
 def check_full_progress() -> list[str]:
     str_arr = []
     if not io.pkl_exists(constants.CONSOLE_LINK_LIST_LOC):
-        return None
+        return ['Console Link Save File, doesn\'t exist, not started']
     console_steps = create_console_steps(constants.CONSOLE_LINK_LIST_LOC)
     num_consoles = len(console_steps)
     for console_idx, console in enumerate(console_steps):
