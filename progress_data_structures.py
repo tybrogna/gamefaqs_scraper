@@ -16,6 +16,13 @@ class SaveName:
         return ret_val
 
 
+class FileAndLinkData(SaveName):
+    def __init__(self, name, link='', save_loc='', completion=False):
+        self.name = name
+        self.link = link
+        self.save_loc = save_loc
+        self.completion = completion
+
 class MainStep(SaveName):
     def __init__(self, name, completion=False):
         super().__init__(name)
@@ -57,25 +64,25 @@ class FileStep(SaveName):
         return f"File Step {self.name} \n    {self.save_loc},\n    {self.link},\n    {"Finished" if self.completion else "Incomplete"}"
 
 
-class LinkStep(SaveName):
-    """
-    :param name: str. unique identifier, unchecked.
-    :param link: str. URL associated with this step
-    :param completion: bool. step progress flag
-    """
-    def __init__(self, name, link='', completion=False):
-        super().__init__(name)
-        self.link: str = link
-        self.completion: bool = completion
-
-    def __eq__(self, other):
-        if not isinstance(other, LinkStep):
-            return NotImplemented
-        return self.name == other.name \
-        # and self.link == other.link  # and self.completion == other.completion
-
-    def __str__(self):
-        return f'Link Step {self.name} \n    {self.link}, {"Finished" if self.completion else "Incomplete"}'
+# class LinkStep(SaveName):
+#     """
+#     :param name: str. unique identifier, unchecked.
+#     :param link: str. URL associated with this step
+#     :param completion: bool. step progress flag
+#     """
+#     def __init__(self, name, link='', completion=False):
+#         super().__init__(name)
+#         self.link: str = link
+#         self.completion: bool = completion
+#
+#     def __eq__(self, other):
+#         if not isinstance(other, LinkStep):
+#             return NotImplemented
+#         return self.name == other.name \
+#         # and self.link == other.link  # and self.completion == other.completion
+#
+#     def __str__(self):
+#         return f'Link Step {self.name} \n    {self.link}, {"Finished" if self.completion else "Incomplete"}'
 
 
 class NamedNumber:
@@ -84,7 +91,7 @@ class NamedNumber:
         self.data = data
 
     def __eq__(self, other):
-        if not isinstance(other, LinkStep):
+        if not isinstance(other, NamedNumber):
             return NotImplemented
         return self.name == other.name
 

@@ -1,3 +1,21 @@
+Jan 27 2024
+    I'm back. I want results
+    General
+        Deleting LinkStep data structure. It was redundant with FileStep, and just confusing me further. I know
+        I've made a lot of little mistakes involving data management, but this is such an elegant (if not
+        proper) fix that its hard to NOT do at this point
+    progress_data_structure.py
+        NamedNumber now actually compares to itself
+            (i dont think NamedNumber actually does anything. it SHOULDN'T, but ill actually check later)
+    constants.py
+        cleaning up stupid random code, just use python its good
+        added time_to_hms_string()
+    main_gamefaqs_scraper.py
+        adding time tracking. calculates how long the actual scraping takes, and how long was spent randomly
+            waiting in fear of the scraper blocker
+    get_console_links.py
+        deleting old_run(), i forget why i kept it around i guess i dont need it no more
+
 Jan 14 2024
     Today while testing (the longest test I ever conducted), I gamefaqs hit me with a "suspicious activity" page.
     Instead of elation at the progress made or that i was finally using the scraper at the pace and

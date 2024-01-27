@@ -6,8 +6,6 @@ import constants
 import progress_data_structures as ds
 from bs4 import BeautifulSoup
 
-type Link_Step_List = list[ds.LinkStep]
-type Save_Pack = list[ds.SaveData]
 kill_event = Event()
 
 
@@ -103,7 +101,7 @@ def create_alias_save_data(alias_url_list):
         id_found = io.pkl_contains_name(f'{alias_console}_game_list', alias_game_id)
         if id_found:
             file_loc = f'{alias_console}_game_list'
-            old_step = ds.LinkStep(name=alias_game_id, link=alias_link, completion=False)
+            old_step = ds.FileStep(name=alias_game_id, link=alias_link, completion=False)
             alias_sd = ds.SaveData(file_loc=file_loc,
                                    blob=old_step.save_new_completion(),
                                    old_blob_for_overwrite=old_step,
@@ -128,14 +126,14 @@ def get_guide_text(page_soup):
     return new_save
 
 
-def create_dl_steps(game_id, guide_links) -> list[ds.LinkStep]:
+def create_dl_steps(game_id, guide_links) -> list[ds.FileStep]:
     if io.exists(game_id):
         return io.unpickle(game_id)
     guide_dl_steps = []
     for guide_link in guide_links:
         href = guide_link['href']
         gl_name = href[href.rindex('/') + 1:]
-        guide_dl_steps.append(ds.LinkStep(name=gl_name, link=href, completion=False))
+        guide_dl_steps.append(ds.FileStep(name=gl_name, link=href, completion=False))
     io.pkl_append_all(game_id, guide_dl_steps)
     return guide_dl_steps
 

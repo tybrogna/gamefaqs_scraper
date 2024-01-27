@@ -1,4 +1,5 @@
 import copy
+import math
 import time
 from threading import Thread
 
@@ -54,13 +55,15 @@ def check_full_progress():
         GUI.display(f'No Scraper Save Data found at {save_folder_loc}')
         return
     steps = get_progress_steps()
-
     for idx, step in enumerate(steps):
         res = globals()[step.name].check_full_progress()
         if res:
             ret_strs.append(f'============  STEP {idx + 1} OF {len(steps)}: {step.name}  ============')
             ret_strs.extend(res)
             ret_strs.append('\n')
+    if io.pkl_exists(constants.TIME_LOC):
+        time_dict = io.unpickle(constants.TIME_LOC)
+        ret_strs.append()
     GUI.display(*ret_strs)
 
 
@@ -109,7 +112,32 @@ def revive_step_events():
         globals()[step.name].enliven()
 
 
+def run_cleanup(GUI, start_time=0.):
+    GUI.enable_buttons()
+    revive_step_events()
+    time_taken = time.time() - start_time
+    spent_waiting = constants.session_waits
+    fmt_session_time = constants.time_to_hms_string(time_taken)
+    fmt_wait_time = constants.time_to_hms_string(spent_waiting)
+    GUI.display('\n')
+    GUI.display(f'Session Time: {fmt_session_time}')
+    GUI.display(f'Scraping Detection Waiting Time: {fmt_wait_time}')
+    if io.pkl_exists(constants.TIME_LOC):
+        timing_dict = io.unpickle(constants.TIME_LOC)
+        timing_dict['total_time'] += time_taken
+        timing_dict['wait_time'] += spent_waiting
+        fmt_total_time = constants.time_to_hms_string(timing_dict['total_time'])
+        fmt_total_wait_time = constants.time_to_hms_string(timing_dict['wait_time'])
+        GUI.display(f'Total Time: {fmt_total_time}')
+        GUI.display(f'Total Scraping Detection Waiting Time: {fmt_total_wait_time}')
+        io.pkl_save_new(constants.TIME_LOC, timing_dict)
+    else:
+        timing_dict = {'total_time': time_taken, 'wait_time': spent_waiting}
+        io.pkl_save_new(constants.TIME_LOC, timing_dict)
+
+
 def run():
+    start_time = time.time()
     GUI.disable_buttons()
     GUI.display(f'Starting...')
     override_folder_loc = ''
@@ -141,8 +169,7 @@ def run():
                     GUI.display(f'{step.name} failed or ended')
                     break
                 GUI.display(f'progress updated: {step.name} => Complete')
-        GUI.enable_buttons()
-        revive_step_events()
+        run_cleanup(GUI, start_time)
     except KeyboardInterrupt:
         for step in steps:
             step_complete = check_progress(step.name)
@@ -163,8 +190,8 @@ def app():
     GUI.mainloop()
 
 def test():
-    io.pkl_test_print('D:\\gamefaqs\\android_page_at')
-    io.pkl_test_print('D:\\gamefaqs\\3ds_page_at')
+    io.pkl_test_print('C:\\Users\\tybro\\Documents\\gamefaqs data\\progress')
+    io.pkl_test_print('C:\\Users\\tybro\\Documents\\gamefaqs data\\console_link_list')
     # soup = constants.heat_soup('https://gamefaqs.gamespot.com/3ds/category/999-all')
     # all_txt = soup.select_one('.paginate li').text
     # final_pg = all_txt[all_txt.rindex(' '):].strip()
@@ -188,6 +215,6 @@ def test():
     # io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
     # print(get_console_links.check_full_progress())
 
-test()
-# app()
+# test()
+app()
 # run_db()

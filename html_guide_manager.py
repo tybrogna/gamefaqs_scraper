@@ -13,14 +13,14 @@ from bs4 import Tag
 kill_event = Event()
 
 
-def __create_html_guide_step(pkl_name: str, base_url: str, toc_list) -> list[ds.LinkStep]:
+def __create_html_guide_step(pkl_name: str, base_url: str, toc_list) -> list[ds.FileStep]:
     html_guide_steps = []
     for page_title in toc_list:
         filesystem_name = page_title.text.replace(':', ' -')
         filesystem_name = filesystem_name.replace('/', ', ')
         filesystem_name = filesystem_name.replace('\\', ', ')
         filesystem_name = re.sub('[<>*?"|]', '', filesystem_name)
-        html_guide_steps.append(ds.LinkStep(name=filesystem_name,
+        html_guide_steps.append(ds.FileStep(name=filesystem_name,
                                             link=base_url + '/' + page_title['href'],
                                             completion=False))
     io.pkl_append_all(pkl_name, html_guide_steps)
@@ -137,10 +137,10 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.GuideMetadata, base_
         print('html guides dying')
         return
     page_step_pkl_name = guide_metadata.game[0:3] + guide_metadata.author[0:3] + '_html_steps'
-    page_steps: list[ds.LinkStep] = io.unpickle(page_step_pkl_name)
+    page_steps: list[ds.FileStep] = io.unpickle(page_step_pkl_name)
     if not page_steps:
         toc_link_list = page_soup.select('#faqwrap .ftoc a')
-        page_steps: list[ds.LinkStep] = __create_html_guide_step(page_step_pkl_name, base_url, toc_link_list)
+        page_steps: list[ds.FileStep] = __create_html_guide_step(page_step_pkl_name, base_url, toc_link_list)
     # io.pkl_test_print(guide_metadata.game + 'TEST_MODE')
     for step in page_steps:
         if kill_event.is_set():

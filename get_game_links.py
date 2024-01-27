@@ -81,7 +81,7 @@ def get_table_size(console_name):
 
 def page_contains_games(page_soup: BeautifulSoup) -> bool:
     """
-    Checks <tbody> on the paramaterized web page for content.
+    Checks <tbody> on the parameterized web page for content.
 
     :param page_soup: BS4 object, web page with <tbody>
     :return: True if <tbody> exists and has content, False otherwise
@@ -134,7 +134,7 @@ def run(GUI):
             for link in guide_links:
                 guide_remove_console = link['href'][len(console_step.name) + 2:-4]
                 guide_name = guide_remove_console[:guide_remove_console.index('-')]
-                guide_link_steps.append(ds.LinkStep(name=guide_name, link=guide_remove_console, completion=False))
+                guide_link_steps.append(ds.FileStep(name=guide_name, link=guide_remove_console, completion=False))
                 if test:
                     print(guide_link_steps[-1])
             save_data = ds.SaveData(file_loc=console_step.save_loc,

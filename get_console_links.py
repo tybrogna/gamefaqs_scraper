@@ -85,35 +85,6 @@ def get_num_pages(soup):
     final_pg = all_txt[all_txt.rindex(' '):].strip()
 
 
-
-def old_run(GUI):
-    GUI.display('Scanning all consoles on gamefaqs...')
-    soup_consoles = constants.heat_soup(constants.URL_gamefaqs + constants.URL_consoles)
-    console_page_all_locations = get_console_locations_list(soup_consoles)
-    GUI.display('FOUND:')
-    for val in console_page_all_locations:
-        GUI.display('    ' + val)
-    console_page_all_links = map(console_location_to_link, console_page_all_locations)
-    console_links = list(filter(verify_games_on_page, console_page_all_links))
-    if kill_event.is_set():
-        print('get console links dying')
-        return False
-    GUI.display('confirmed links created')
-    for val in console_links:
-        GUI.display('    ' + val)
-    io.pkl_append(COUNT_LOC, str(len(console_links)))
-    for confirmed_link in console_links:
-        name = get_locations_from_confirmed_link(confirmed_link)
-        link_step = ds.LinkStep(name, link=confirmed_link, completion=False)
-        io.pkl_append(constants.CONSOLE_LINK_LIST_LOC, link_step)
-        io.pkl_append(constants.CONSOLE_LINK_FOR_GUIDES, link_step)
-        io.pkl_append(constants.CONSOLE_DL_LIST_LOC, link_step)
-    GUI.display('Console Links Saved!!')
-    if test:
-        io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
-    return True
-
-
 def run(GUI):
     GUI.display('Scanning all consoles on gamefaqs...')
     soup_consoles = constants.heat_soup(constants.URL_gamefaqs + constants.URL_consoles)
@@ -144,10 +115,12 @@ def run(GUI):
             continue
         # link is confirmed from here on
         name = get_name_from_link(console_link)
+        # console_link_save_data = ds.SaveData(file_loc=constants.CONSOLE_LINK_LIST_LOC,
+        #                                      blob=ds.LinkStep(name, link=console_link, completion=False),
+        #                                      file_type='pickle')
         console_link_save_data = ds.SaveData(file_loc=constants.CONSOLE_LINK_LIST_LOC,
-                                             blob=ds.LinkStep(name, link=console_link, completion=False),
+                                             blob=ds.FileStep(name, link=console_link, completion=False),
                                              file_type='pickle')
-        # io.pkl_append(constants.CONSOLE_LINK_LIST_LOC, link_step)
         paginate_text = console_soup.select_one('.paginate li').text
         final_pg = paginate_text[paginate_text.rindex(' '):].strip()
         page_length_save_data = ds.SaveData(file_loc=constants.CONSOLE_PAGE_LENGTHS,
@@ -157,6 +130,7 @@ def run(GUI):
         count_save_data['consoles_checked'] = count_save_data['consoles_checked'] + 1
         io.pkl_save_new(COUNT_LOC, count_save_data)
     io.pkl_delete(COUNT_LOC)
+
 
 
 def verify_complete() -> bool:

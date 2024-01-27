@@ -16,6 +16,7 @@ HEADERS = [
     {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
 ]
 
+TIME_LOC = 'time_taken'
 CONSOLE_LINK_LIST_LOC = 'console_link_list'
 CONSOLE_LINK_FOR_GUIDES = 'console_link_list_2'
 CONSOLE_PAGE_LENGTHS = 'console_page_lengths'
@@ -33,6 +34,8 @@ URL_css = '/a/css'
 
 CONSOLE_EXCLUDE = ['ps2', 'gc', 'xbox', 'game_boy']
 GUI: gui_manager.Gui = None
+session_waits: int = 0
+
 
 def heat_soup(url) -> BeautifulSoup:
     """
@@ -41,11 +44,11 @@ def heat_soup(url) -> BeautifulSoup:
     :param url: string url of webpage
     :return: BeautifulSoup html object
     """
-    r_num = math.floor(random.random() * len(HEADERS))
-    if r_num == len(HEADERS):
-        r_num = len(HEADERS) - 1
-    random_header = HEADERS[r_num]
-    r_num = 13 + math.floor(random.random() * 17)
+    random_header = HEADERS[random.randrange(0, len(HEADERS))]
+    r_num = random.randrange(3, 15)
+    GUI.display(f'{r_num} second wait...')
+    global session_waits
+    session_waits = session_waits + r_num
     time.sleep(r_num)
     req = requests.get(url, headers=random_header)
     if GUI:
@@ -76,6 +79,15 @@ def text_after_last_slash(text: str) -> str:
     elif '\\' in text:
         return text[text.rindex('\\') + 1:]
     return ''
+
+
+def time_to_hms_string(t: float) -> str:
+    hrs = math.floor(t / 3600)
+    t -= hrs * 3600
+    mins = math.floor(t / 60)
+    t -= mins * 60
+    secs = '{:.1f}'.format(t)
+    return f'{hrs}:{mins}:{secs}'
 
 
 def force_save_pack_sync(*save_pack: SaveData):
