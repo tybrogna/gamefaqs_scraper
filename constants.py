@@ -48,7 +48,8 @@ def heat_soup(url) -> BeautifulSoup:
     """
     random_header = HEADERS[random.randrange(0, len(HEADERS))]
     r_num = random.randrange(3, 15)
-    GUI.display(f'{r_num} second wait...')
+    if GUI:
+        GUI.display(f'{r_num} second wait...')
     global session_waits
     session_waits = session_waits + r_num
     if not speed_mode:

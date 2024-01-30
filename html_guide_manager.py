@@ -15,13 +15,23 @@ kill_event = Event()
 
 def __create_html_guide_step(pkl_name: str, base_url: str, toc_list) -> list[ds.FileStep]:
     html_guide_steps = []
-    for page_title in toc_list:
-        filesystem_name = constants.friendly_file_name(page_title.text)
+    for idx, page_title in enumerate(toc_list):
+        filesystem_name = constants.friendly_file_name(f'{idx} {page_title.text}')
         html_guide_steps.append(ds.FileStep(name=filesystem_name,
-                                            link=base_url + '/' + page_title['href'],
                                             completion=False))
+        # html_guide_steps.append(ds.FileStep(name=filesystem_name,
+        #                                     link=base_url + '/' + page_title['href'],
+        #                                     completion=False))
+    html_guide_steps[0].link = base_url
     io.pkl_append_all(pkl_name, html_guide_steps)
     return html_guide_steps
+
+
+def __get_pagination_link(page_soup: BeautifulSoup) -> str:
+    for li in page_soup.select_one('ul.paginate').select('a'):
+        for s in li.strings:
+            if "Next Page" in s:
+                return li['href']
 
 
 def __get_css_name(soup) -> str:
@@ -130,6 +140,7 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.GuideMetadata, base_
     :param guide_metadata: non-content guide data
     :param base_url: non-Table of content appended url to the guide
     """
+    #TODO check if this works for both RDR2 and Bayo2
     if kill_event.is_set():
         print('html guides dying')
         return
@@ -139,15 +150,17 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.GuideMetadata, base_
         toc_link_list = page_soup.select('#faqwrap .ftoc a')
         page_steps: list[ds.FileStep] = __create_html_guide_step(page_step_pkl_name, base_url, toc_link_list)
     # io.pkl_test_print(guide_metadata.game + 'TEST_MODE')
-    for step in page_steps:
+    for st_at, step in enumerate(page_steps):
         if kill_event.is_set():
             print('html guides dying')
             return
-        guide_save_pack = []
         if step.completion:
-            print(step)
             continue
+        guide_save_pack = []
         page_soup = constants.heat_soup(step.link)
+        if st_at < len(page_steps):
+            next_step = page_steps[st_at + 1]
+            next_step.link = base_url + __get_pagination_link(page_soup)
         page_metadata = __get_page_metadata(guide_metadata, step.name)
         page_content = page_soup.select_one('#faqwrap')
         css_name = __get_css_name(page_soup)
@@ -165,8 +178,6 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.GuideMetadata, base_
                                          blob=step.save_new_completion(),
                                          old_blob_for_overwrite=step,
                                          file_type='pickle')
-        # page_progress_data.old_blob_for_overwrite = step
-        # page_progress_data.blob = step.save_new_completion()
-        # page_progress_data.file_type = 'pickle'
         guide_save_pack.append(page_progress_data)
         constants.force_save_pack(*guide_save_pack)
+    io.pkl_delete(page_step_pkl_name)

@@ -190,9 +190,17 @@ def app():
 
 def test():
     # io.pkl_test_print('D:\\gamefaqs\\progress')
-    io.pkl_test_print('D:\\gamefaqs\\wii-u_game_list')
     # io.pkl_test_print('D:\\gamefaqs\\wii-u_game_list')
-    # soup = constants.heat_soup('https://gamefaqs.gamespot.com/3ds/category/999-all')
+    # io.pkl_test_print('D:\\gamefaqs\\wii-u_game_list')
+    soup = constants.heat_soup('https://gamefaqs.gamespot.com/wii-u/683293-bayonetta-2/faqs/70436')
+    for li in soup.select_one('ul.paginate').select('a'):
+        for s in li.strings:
+            if "Next Page" in s:
+                print(li['href'])
+    toc_list = soup.select('#faqwrap .ftoc a')
+    for idx, page_title in enumerate(toc_list):
+        print(f'{idx} {constants.friendly_file_name(page_title.text)}')
+
     # all_txt = soup.select_one('.paginate li').text
     # final_pg = all_txt[all_txt.rindex(' '):].strip()
     # print(final_pg)
@@ -215,6 +223,6 @@ def test():
     # io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
     # print(get_console_links.check_full_progress())
 
-# test()
-app()
+test()
+# app()
 # run_db()

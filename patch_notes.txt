@@ -1,4 +1,10 @@
 Jan 30 2024
+    getting code off my laptop
+    NEW INFORMATION DISCOVERED
+        the table of contents in HTML guides dont always work! switching over to a linear iterative way of getting
+            links based on the pagination buttons on each individual guide page.
+
+Jan 29 2024
     constants.py
         added "speed mode", which removes the delay when scraping (for testing)
         added friendly_file_name()
