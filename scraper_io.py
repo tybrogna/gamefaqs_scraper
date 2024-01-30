@@ -5,19 +5,19 @@ import sqlite3
 
 import constants
 
-ABSOLUTE_PATH = ''
-DATA_FOLDER = 'data'
+DATA_FOLDER = ''
 DATABASE_NAME = 'scraper.db'
 CSS_LOC = 'web_files'
 override_folder = ''
 
 
 def setup(override_loc=''):
-    global ABSOLUTE_PATH, DATA_FOLDER
+    global DATA_FOLDER
     if override_loc != '':
-        DATA_FOLDER = override_loc
-    ABSOLUTE_PATH = os.path.dirname(os.path.abspath(DATA_FOLDER))
-    ABSOLUTE_PATH = os.path.join(ABSOLUTE_PATH, DATA_FOLDER)
+        DATA_FOLDER = os.path.normcase(override_loc)
+    # ABSOLUTE_PATH = os.path.dirname(os.path.abspath(DATA_FOLDER)).join(DATA_FOLDER)
+    # ABSOLUTE_PATH = os.path.join(ABSOLUTE_PATH, DATA_FOLDER)
+    # ABSOLUTE_PATH = os.path.normcase(ABSOLUTE_PATH)
     # if not os.path.exists(ABSOLUTE_PATH):
     #     os.makedirs(ABSOLUTE_PATH)
     # if not os.path.exists(os.path.join(DATA_FOLDER, CSS_LOC)):
@@ -25,8 +25,8 @@ def setup(override_loc=''):
 
 
 def create_folders():
-    if not os.path.exists(ABSOLUTE_PATH):
-        os.makedirs(ABSOLUTE_PATH)
+    if not os.path.exists(DATA_FOLDER):
+        os.makedirs(DATA_FOLDER)
     if not os.path.exists(os.path.join(DATA_FOLDER, CSS_LOC)):
         os.makedirs(os.path.join(DATA_FOLDER, CSS_LOC))
 
@@ -47,8 +47,8 @@ def create_folder(folder_loc):
 def __save_in_data(file_loc):
     # if override_folder != '' and not file_loc.startswith(override_folder):
     #     file_loc = override_folder + file_loc
-    if not file_loc.startswith(ABSOLUTE_PATH):
-        file_loc = os.path.join(ABSOLUTE_PATH, file_loc)
+    if not file_loc.startswith(DATA_FOLDER):
+        file_loc = os.path.join(DATA_FOLDER, file_loc)
     create_folder(constants.text_before_last_slash(file_loc))
     return file_loc
 

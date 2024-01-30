@@ -1,3 +1,19 @@
+Jan 30 2024
+    constants.py
+        added "speed mode", which removes the delay when scraping (for testing)
+        added friendly_file_name()
+        SaveData can now 'delete' as a filetype
+    get_console_links.py
+        now saves a second CONSOLE_LINK_LIST_LOC for guide completion tracking purposes
+    get_guides.py
+        added a new metadata scraping function (to be renamed). metadata needs to be done in
+            two parts, not everything can be filled out at once
+    scraper_io.py
+        deleted ABSOLUTE_PATH.
+            no longer necessary to have both DATA_FOLDER and ABSOLUTE_PATH now that i always feed an absolute path
+    progress_data_structures.py
+        added link, incomplete, and award to GuideMetadata
+
 Jan 27 2024
     I'm back. I want results
     General

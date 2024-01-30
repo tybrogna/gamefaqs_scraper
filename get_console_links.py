@@ -9,6 +9,8 @@ import progress_data_structures as ds
 
 COUNT_LOC = 'get_console_links_count'
 test = True
+test_limit = False
+test_wiiu = True
 kill_event = Event()
 
 
@@ -40,9 +42,11 @@ def get_console_locations_list(soup_consoles):
         for ch in link[1:]:
             add &= ch != '/'
         add &= link not in locations
+        if test_wiiu:
+            add &= 'wii-u' in link
         if add:
             locations.append(link)
-        if test and len(locations) >= 10:
+        if test_limit and len(locations) >= 10:
             break
     return locations
 
@@ -121,12 +125,15 @@ def run(GUI):
         console_link_save_data = ds.SaveData(file_loc=constants.CONSOLE_LINK_LIST_LOC,
                                              blob=ds.FileStep(name, link=console_link, completion=False),
                                              file_type='pickle')
+        for_guides_link_save_data = ds.SaveData(file_loc=constants.CONSOLE_LINK_FOR_GUIDES,
+                                                blob=ds.FileStep(name, link=console_link, completion=False),
+                                                file_type='pickle')
         paginate_text = console_soup.select_one('.paginate li').text
         final_pg = paginate_text[paginate_text.rindex(' '):].strip()
         page_length_save_data = ds.SaveData(file_loc=constants.CONSOLE_PAGE_LENGTHS,
                                             blob=ds.NamedNumber(name, data=final_pg),
                                             file_type='pickle')
-        constants.force_save_pack(console_link_save_data, page_length_save_data)
+        constants.force_save_pack(console_link_save_data, for_guides_link_save_data, page_length_save_data)
         count_save_data['consoles_checked'] = count_save_data['consoles_checked'] + 1
         io.pkl_save_new(COUNT_LOC, count_save_data)
     io.pkl_delete(COUNT_LOC)

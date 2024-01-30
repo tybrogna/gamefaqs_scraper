@@ -2,6 +2,7 @@ import _thread
 import requests
 import random
 import math
+import re
 import scraper_io as io
 from bs4 import BeautifulSoup
 import time
@@ -35,6 +36,7 @@ URL_css = '/a/css'
 CONSOLE_EXCLUDE = ['ps2', 'gc', 'xbox', 'game_boy']
 GUI: gui_manager.Gui = None
 session_waits: int = 0
+speed_mode = True
 
 
 def heat_soup(url) -> BeautifulSoup:
@@ -49,7 +51,8 @@ def heat_soup(url) -> BeautifulSoup:
     GUI.display(f'{r_num} second wait...')
     global session_waits
     session_waits = session_waits + r_num
-    time.sleep(r_num)
+    if not speed_mode:
+        time.sleep(r_num)
     req = requests.get(url, headers=random_header)
     if GUI:
         GUI.display(str(req.status_code) + " from " + url)
@@ -63,6 +66,14 @@ def url_request_blob(url: str) -> requests.Response:
     GUI.display(str(req.status_code) + " from " + url)
     print(str(req.status_code) + " from " + url)
     return req
+
+
+def friendly_file_name(file_loc):
+    file_loc = file_loc.replace(':', ' -') \
+                        .replace('/', ', ') \
+                        .replace('\\', ', ')
+    file_loc = re.sub('[<>*?"|]', '', file_loc)
+    return file_loc
 
 
 def text_before_last_slash(text: str) -> str:
@@ -168,6 +179,8 @@ def __saved_future(save: SaveData) -> bool:
         done = io.save_img(save.file_loc, save.blob)
     elif save.file_type == 'css':
         done = io.save_css(save.file_loc, save.blob)
+    elif save.file_type == 'delete':
+        done = io.pkl_delete(save.file_loc)
     else:
         done = io.save_text(save.file_loc, save.blob)
     return done

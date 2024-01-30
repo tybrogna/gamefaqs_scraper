@@ -123,7 +123,7 @@ def run_cleanup(GUI, start_time=0.):
     GUI.display(f'Session Time: {fmt_session_time}')
     GUI.display(f'Scraping Detection Waiting Time: {fmt_wait_time}')
     if io.pkl_exists(constants.TIME_LOC):
-        timing_dict = io.unpickle(constants.TIME_LOC)
+        timing_dict = io.unpickle(constants.TIME_LOC)[0]
         timing_dict['total_time'] += time_taken
         timing_dict['wait_time'] += spent_waiting
         fmt_total_time = constants.time_to_hms_string(timing_dict['total_time'])
@@ -146,7 +146,6 @@ def run():
     io.setup(override_folder_loc)
     io.create_folders()
     steps = get_progress_steps()
-    #TODO actually make app read in progress file
     try:
         for step in steps:
             print(f'checking {step.name} step')
@@ -190,8 +189,9 @@ def app():
     GUI.mainloop()
 
 def test():
-    io.pkl_test_print('C:\\Users\\tybro\\Documents\\gamefaqs data\\progress')
-    io.pkl_test_print('C:\\Users\\tybro\\Documents\\gamefaqs data\\console_link_list')
+    # io.pkl_test_print('D:\\gamefaqs\\progress')
+    io.pkl_test_print('D:\\gamefaqs\\wii-u_game_list')
+    # io.pkl_test_print('D:\\gamefaqs\\wii-u_game_list')
     # soup = constants.heat_soup('https://gamefaqs.gamespot.com/3ds/category/999-all')
     # all_txt = soup.select_one('.paginate li').text
     # final_pg = all_txt[all_txt.rindex(' '):].strip()

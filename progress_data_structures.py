@@ -98,6 +98,7 @@ class NamedNumber:
 
 class GuideMetadata:
     def __init__(self):
+        self.link = ''
         self.game = ''
         self.title = ''
         self.author = ''
@@ -105,6 +106,8 @@ class GuideMetadata:
         self.year = ''
         self.platform = ''
         self.starred = False
+        self.incomplete = False
+        self.award = False
         self.link = ''
         self.html = False
 

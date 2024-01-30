@@ -16,10 +16,7 @@ kill_event = Event()
 def __create_html_guide_step(pkl_name: str, base_url: str, toc_list) -> list[ds.FileStep]:
     html_guide_steps = []
     for page_title in toc_list:
-        filesystem_name = page_title.text.replace(':', ' -')
-        filesystem_name = filesystem_name.replace('/', ', ')
-        filesystem_name = filesystem_name.replace('\\', ', ')
-        filesystem_name = re.sub('[<>*?"|]', '', filesystem_name)
+        filesystem_name = constants.friendly_file_name(page_title.text)
         html_guide_steps.append(ds.FileStep(name=filesystem_name,
                                             link=base_url + '/' + page_title['href'],
                                             completion=False))
@@ -75,7 +72,7 @@ def __create_html_save_data(page_metadata: ds.PageMetadata, css_name: str, page_
     """
     html_blob = []
     html_blob.append('<!DOCTYPE html>')
-    css_location = os.path.join(io.ABSOLUTE_PATH, io.CSS_LOC, css_name)
+    css_location = os.path.join(io.DATA_FOLDER, io.CSS_LOC, css_name)
     html_blob.append(f'<link id="core_css" href="{css_location}" rel="stylesheet" type="text/css">')
     html_blob.append('<div class="container">')
     html_blob.append('<div id="faqwrap" class="ffaq ffaqbody">')

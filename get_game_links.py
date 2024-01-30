@@ -32,7 +32,6 @@ def create_file_steps(console_links_file: str) -> list[ds.FileStep]:
     for console in console_link_steps:
         if test:
             print("get_game_links.py - adding {0} to steps".format(console.name))
-        # steps.append(ds.File_Step(console.name, console.link, "{0}_game_list".format(console.name), console.completion))
         steps.append(ds.FileStep(name=console.name,
                                  link=console.link,
                                  save_loc="{0}_game_list".format(console.name),
@@ -146,12 +145,12 @@ def run(GUI):
                                     file_type='pickle')
             GUI.display(f'  Saving {len(guide_link_steps)} game links...')
             constants.force_save_pack(save_data, save_page)
-        io.pkl_delete(page_file_loc)
+        delete_page_loc_data = ds.SaveData(file_loc=page_file_loc, file_type='delete')
         save_data = ds.SaveData(file_loc=constants.CONSOLE_LINK_LIST_LOC,
                                 blob=console_step.save_new_completion(),
                                 old_blob_for_overwrite=console_step,
                                 file_type='pickle')
-        constants.force_save_pack(save_data)
+        constants.force_save_pack(save_data, delete_page_loc_data)
 
 
 def verify_complete() -> bool:
