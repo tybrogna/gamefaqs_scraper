@@ -110,6 +110,8 @@ class GuideMetadata:
         self.award = False
         self.link = ''
         self.html = False
+        self.paginated = False
+        self.num_pages = 0
 
     def save_title(self):
         star_ornament = '[!] ' if self.starred else ''

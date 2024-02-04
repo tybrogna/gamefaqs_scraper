@@ -36,10 +36,10 @@ URL_css = '/a/css'
 CONSOLE_EXCLUDE = ['ps2', 'gc', 'xbox', 'game_boy']
 GUI: gui_manager.Gui = None
 session_waits: int = 0
-speed_mode = True
+speed_mode = False
 
 
-def heat_soup(url) -> BeautifulSoup:
+def heat_soup(url: str) -> BeautifulSoup:
     """
     makes a web request of the paramter url, then creates a soup object
 
@@ -58,23 +58,46 @@ def heat_soup(url) -> BeautifulSoup:
     if GUI:
         GUI.display(str(req.status_code) + " from " + url)
     print(str(req.status_code) + " from " + url)
-
     return BeautifulSoup(req.text, "html.parser")
+
+
+def local_soup(path) -> BeautifulSoup:
+    tg = open(path, 'r')
+    return BeautifulSoup(tg, "html.parser")
 
 
 def url_request_blob(url: str) -> requests.Response:
     req = requests.get(url, headers=HEADERS[-1], stream=True)
-    GUI.display(str(req.status_code) + " from " + url)
+    # if GUI:
+    #     GUI.display(str(req.status_code) + " from " + url)
     print(str(req.status_code) + " from " + url)
     return req
 
 
-def friendly_file_name(file_loc):
+# def friendly_file_name(file_loc):
+#     file_loc = file_loc.replace(':', ' -') \
+#                        .replace('/', ', ') \
+#                        .replace('\\', ', ')
+#     file_loc = re.sub('[<>*?"|]', '', file_loc)
+#     return file_loc
+
+
+def friendly_file_name(file_loc, *other_locs):
     file_loc = file_loc.replace(':', ' -') \
-                        .replace('/', ', ') \
-                        .replace('\\', ', ')
+                       .replace('/', ', ') \
+                       .replace('\\', ', ')
     file_loc = re.sub('[<>*?"|]', '', file_loc)
-    return file_loc
+    if not other_locs:
+        return file_loc
+    else:
+        ret_file_locs = [file_loc]
+        for loc in other_locs:
+            new_loc = loc.replace(':', ' -') \
+                .replace('/', ', ') \
+                .replace('\\', ', ')
+            new_loc = re.sub('[<>*?"|]', '', new_loc)
+            ret_file_locs.append(new_loc)
+        return ret_file_locs
 
 
 def text_before_last_slash(text: str) -> str:
@@ -155,6 +178,8 @@ def force_save_pack(*save_pack: SaveData):
             save.blob = str(save.blob)
         if type(save.old_blob_for_overwrite) is int:
             save.old_blob_for_overwrite = str(save.old_blob_for_overwrite)
+        io.create_folder(save.file_loc.parent)
+        io.create_file(save.file_loc)
 
     with ThreadPoolExecutor(max_workers=8) as pool:
         finished_futures = []

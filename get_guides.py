@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from threading import Event
 
 import html_guide_manager
@@ -75,8 +75,10 @@ def true_get_guide_metadata(page_soup):
             md.author += author.string + ' and '
         md.author = md.author[:-5]
         print(md.author)
-        if square.select('.ital'):
-            md.incomplete = True
+        ital_text = square.select('.ital')
+        for it in ital_text:
+            if 'incomplete' in str.lower(it.string):
+                md.incomplete = True
         for flair in square.select('.flair'):
             if flair.string == 'HTML':
                 md.html = True
@@ -91,8 +93,13 @@ def finish_metadata(page_soup, md):
     md.year = ver_and_date[ver_and_date.rindex('/') + 1:]
     if not page_soup.select_one('i.fa-star') is None:
         md.starred = True
+    if md.html:
+        for list_item in page_soup.select('ul.paginate'):
+            for s in list_item.strings:
+                if "page 1 of " in str.lower(s):
+                    md.paginated = True
+                    md.num_pages = int(s[s.rindex(' ') + 1:])
     #do award here?
-
 
 
 def get_all_guide_links(page_soup):
@@ -102,7 +109,7 @@ def get_all_guide_links(page_soup):
     return guide_links
 
 
-def get_guide_metadata(page_soup):
+def old_get_guide_metadata(page_soup):
     guide_metadata = ds.GuideMetadata()
     if page_soup.select_one('#faqwrap .ftoc a') is not None:
         guide_metadata.html = True
@@ -182,14 +189,14 @@ def create_dl_steps(game_id, guide_metadatas) -> list[ds.FileStep]:
 def test_html_guide():
     # tg = open('./temp_files/tg.htm', 'r')
     # soup = BeautifulSoup(tg, "html.parser")
-    base_url = 'https://gamefaqs.gamespot.com/ps4/200179-red-dead-redemption-2/faqs/76594'
-    soup = constants.heat_soup(base_url)
-    metadata = get_guide_metadata(soup)
-    html_guide_manager.save_guide(soup, metadata, base_url)
+    # base_url = 'https://gamefaqs.gamespot.com/ps4/200179-red-dead-redemption-2/faqs/76594'
+    soup = constants.heat_soup('https://gamefaqs.gamespot.com/wii-u/683293-bayonetta-2/faqs')
+    metadata = true_get_guide_metadata(soup)
+    base_url = 'https://gamefaqs.gamespot.com/wii-u/683293-bayonetta-2/faqs/70436'
+    html_guide_manager.save_guide(soup, metadata[0], base_url)
 
 
 def run(GUI):
-    #TODO by the time this gets here, all the steps in CONSOLE_LINK_LIST_LOC are complete
     console_steps = create_console_steps(constants.CONSOLE_LINK_FOR_GUIDES)
     for console in console_steps:
         game_steps = create_game_steps(console.save_loc)
@@ -223,7 +230,6 @@ def run(GUI):
                     constants.force_save_pack(guide_progress_data)
                     continue
                 finish_metadata(guide_soup, guide_metadata)
-                # guide_metadata = get_guide_metadata(guide_soup)
                 alias_data_list = create_alias_save_data(alias_url_list)
                 guide_progress_data = ds.SaveData(file_loc=game.name,
                                                   blob=guide_step.save_new_completion(),
@@ -234,9 +240,8 @@ def run(GUI):
                     constants.force_save_pack(guide_progress_data, *alias_data_list)
                 else:
                     guide_data = get_guide_text(guide_soup)
-                    guide_data.file_loc = constants.friendly_file_name(
-                        os.path.join(guide_metadata.game, guide_metadata.save_title()))
-                    print(guide_data.file_loc)
+                    guide_data.file_loc = Path(*constants.friendly_file_name(
+                            guide_metadata.game, guide_metadata.save_title()))
                     guide_progress_data = ds.SaveData(file_loc=game.name,
                                                       blob=guide_step.save_new_completion(),
                                                       old_blob_for_overwrite=guide_step,
@@ -249,6 +254,7 @@ def run(GUI):
             delete_game_name_data = ds.SaveData(file_loc=game.name,
                                                 file_type='delete')
             constants.force_save_pack(game_progress_data, delete_game_name_data)
+
 
 def verify_complete():
     console_steps = create_console_steps(constants.CONSOLE_LINK_LIST_LOC)

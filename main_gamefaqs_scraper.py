@@ -62,8 +62,9 @@ def check_full_progress():
             ret_strs.extend(res)
             ret_strs.append('\n')
     if io.pkl_exists(constants.TIME_LOC):
-        time_dict = io.unpickle(constants.TIME_LOC)
-        ret_strs.append()
+        time_dict = io.unpickle(constants.TIME_LOC)[0]
+        ret_strs.append(f'{time_dict['total_time']} seconds spent working')
+        ret_strs.append(f'{time_dict['wait_time']} seconds dodging scraping detectors')
     GUI.display(*ret_strs)
 
 
@@ -177,7 +178,7 @@ def run():
             else:
                 print(f'stopped while performing the {step.name} step')
                 print(f'step progress ->')
-                globals()[step.name].print_progress()
+                # globals()[step.name].print_progress()
                 break
 
 
@@ -188,41 +189,8 @@ def app():
     constants.GUI = GUI
     GUI.mainloop()
 
-def test():
-    # io.pkl_test_print('D:\\gamefaqs\\progress')
-    # io.pkl_test_print('D:\\gamefaqs\\wii-u_game_list')
-    # io.pkl_test_print('D:\\gamefaqs\\wii-u_game_list')
-    soup = constants.heat_soup('https://gamefaqs.gamespot.com/wii-u/683293-bayonetta-2/faqs/70436')
-    for li in soup.select_one('ul.paginate').select('a'):
-        for s in li.strings:
-            if "Next Page" in s:
-                print(li['href'])
-    toc_list = soup.select('#faqwrap .ftoc a')
-    for idx, page_title in enumerate(toc_list):
-        print(f'{idx} {constants.friendly_file_name(page_title.text)}')
 
-    # all_txt = soup.select_one('.paginate li').text
-    # final_pg = all_txt[all_txt.rindex(' '):].strip()
-    # print(final_pg)
-    # nl = [''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=5)) for n in range(100000)]
-    # locl = ['C:\\'.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=8)) for n in range(100000)]
-    # linl = ['https://www.'.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=35)).join('.com') for n in range(100000)]
-    # sl = []
-    # st = time.time()
-    # for x in range(100000):
-    #     sl.append(ds.FileStep(name=nl[x], link=linl[x], save_loc=locl[x]))
-    # print("--- %s seconds ---" % (time.time() - st))
-    # save_data = ds.SaveData(file_type='pickle',
-    #                         file_loc=constants.CONSOLE_LINK_LIST_LOC,
-    #                         blob='hehe',)
-    # print(save_data)
-    # io.setup('D:\\gamefaqs')
-    # options_dict = {'name':'ahah', 'save_loc':'c drive', 'completion':True}
-    # print(ds.FileStep(name='something'))
-    # print(ds.FileStep(**options_dict))
-    # io.pkl_test_print(constants.CONSOLE_LINK_LIST_LOC)
-    # print(get_console_links.check_full_progress())
-
-test()
+import scrap_code
+scrap_code.test()
 # app()
 # run_db()

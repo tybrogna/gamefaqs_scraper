@@ -1,11 +1,11 @@
 from atomicwrites import atomic_write as atom
 import pickle
-import os
 import sqlite3
+from pathlib import Path
 
 import constants
 
-DATA_FOLDER = ''
+DATA_FOLDER = Path('')
 DATABASE_NAME = 'scraper.db'
 CSS_LOC = 'web_files'
 override_folder = ''
@@ -14,7 +14,7 @@ override_folder = ''
 def setup(override_loc=''):
     global DATA_FOLDER
     if override_loc != '':
-        DATA_FOLDER = os.path.normcase(override_loc)
+        DATA_FOLDER = Path(override_loc)
     # ABSOLUTE_PATH = os.path.dirname(os.path.abspath(DATA_FOLDER)).join(DATA_FOLDER)
     # ABSOLUTE_PATH = os.path.join(ABSOLUTE_PATH, DATA_FOLDER)
     # ABSOLUTE_PATH = os.path.normcase(ABSOLUTE_PATH)
@@ -25,44 +25,64 @@ def setup(override_loc=''):
 
 
 def create_folders():
-    if not os.path.exists(DATA_FOLDER):
-        os.makedirs(DATA_FOLDER)
-    if not os.path.exists(os.path.join(DATA_FOLDER, CSS_LOC)):
-        os.makedirs(os.path.join(DATA_FOLDER, CSS_LOC))
+    if not Path.exists(DATA_FOLDER):
+        Path.mkdir(DATA_FOLDER, parents=True)
+    if not Path.exists(DATA_FOLDER / CSS_LOC):
+        Path.mkdir(DATA_FOLDER / CSS_LOC, parents=True)
 
 
-def path_exists(save_loc):
-    if not os.path.exists(save_loc):
+def path_exists(save_loc: str | Path):
+    if isinstance(save_loc, str):
+        save_loc = Path(save_loc)
+    if not Path.exists(save_loc):
         return False
     return True
 
 
-def create_folder(folder_loc):
-    if not os.path.exists(folder_loc):
-        os.makedirs(folder_loc)
+def create_folder_in_data(folder_loc: str | Path) -> bool:
+    if isinstance(folder_loc, str):
+        folder_loc = Path(folder_loc)
+    folder_loc = __save_in_data(folder_loc)
+    return create_folder(folder_loc)
+
+
+def create_folder(folder_loc: str | Path) -> bool:
+    if isinstance(folder_loc, str):
+        folder_loc = Path(folder_loc)
+    if not Path.exists(folder_loc):
+        Path.mkdir(folder_loc,  parents=True)
         return True
     return False
 
 
-def __save_in_data(file_loc):
-    # if override_folder != '' and not file_loc.startswith(override_folder):
-    #     file_loc = override_folder + file_loc
-    if not file_loc.startswith(DATA_FOLDER):
-        file_loc = os.path.join(DATA_FOLDER, file_loc)
-    create_folder(constants.text_before_last_slash(file_loc))
+def __save_in_data(file_loc: str | Path) -> Path:
+    if isinstance(file_loc, str):
+        file_loc = Path(file_loc)
+    if not file_loc.is_relative_to(DATA_FOLDER):
+        file_loc = DATA_FOLDER / file_loc
+    return file_loc
+    # if not file_loc.startswith(DATA_FOLDER):
+    #     file_loc = os.path.join(DATA_FOLDER, file_loc)
+    # create_folder(constants.text_before_last_slash(file_loc))
+    # return file_loc
+
+
+def __becomes_pickle(file_loc: str | Path) -> Path:
+    if isinstance(file_loc, str):
+        file_loc = Path(file_loc)
+    if not file_loc.suffix == '.pickle':
+        file_loc = file_loc.with_suffix('.pickle')
     return file_loc
 
 
-def __becomes_pickle(file_loc):
-    if not file_loc.endswith(".pickle"):
-        file_loc = file_loc + ".pickle"
-    return file_loc
-
-
-def create_file(file_loc):
+def create_file_in_data(file_loc: str | Path) -> bool:
     file_loc = __save_in_data(file_loc)
-    if not os.path.exists(file_loc) or os.stat(file_loc).st_size == 0:
-        open(file_loc, 'w').close()
+    return create_file(file_loc)
+
+
+def create_file(file_loc: str | Path) -> bool:
+    if not Path.exists(file_loc) or Path.stat(file_loc).st_size == 0:
+        Path.touch(file_loc)
         return True
     return False
 
@@ -72,19 +92,20 @@ def create_pkl(file_loc):
     return create_file(file_loc)
 
 
-def exists(file_loc):
+def exists(file_loc: str | Path):
     file_loc = __save_in_data(file_loc)
-    if not os.path.exists(file_loc):
+    if not Path.exists(file_loc):
         return False
     return True
 
 
-def pkl_exists(file_loc):
+def pkl_exists(file_loc: str | Path) -> bool:
+    file_loc = __save_in_data(file_loc)
     file_loc = __becomes_pickle(file_loc)
     return exists(file_loc)
 
 
-def pkl_create_file(file_loc):
+def pkl_create_file(file_loc: str | Path) -> bool:
     file_loc = __becomes_pickle(file_loc)
     return create_file(file_loc)
 
@@ -131,12 +152,6 @@ def pkl_overwrite(file_loc, old_data, new_data):
     __atomize(file_loc, file_data)
     return True
 
-    # with atom(file_loc, mode='wb', overwrite=True) as write_file:
-    #     for data in file_data:
-    #         bin_data = pickle.dumps(data)
-    #         write_file.write(bin_data)
-    # return True
-
 
 def pkl_append_all(file_loc, data_array):
     """
@@ -160,15 +175,6 @@ def pkl_append_all(file_loc, data_array):
     __atomize(file_loc, file_data)
     return True
 
-    # with atom(file_loc, mode='wb', overwrite=True) as write_file:
-    #     for data in file_data:
-    #         bin_data = pickle.dumps(data)
-    #         write_file.write(bin_data)
-    #     for data in data_array:
-    #         bin_data = pickle.dumps(data)
-    #         write_file.write(bin_data)
-    # return True
-
 
 def pkl_append(file_loc, new_data):
     """
@@ -191,14 +197,6 @@ def pkl_append(file_loc, new_data):
     file_data.append(new_data)
     __atomize(file_loc, file_data)
     return True
-
-    # with atom(file_loc, mode='wb', overwrite=True) as write_file:
-    #     for data in file_data:
-    #         bin_data = pickle.dumps(data)
-    #         write_file.write(bin_data)
-    #     bin_data = pickle.dumps(new_data)
-    #     write_file.write(bin_data)
-    # return True
 
 
 def pkl_contains_name(file_loc, name):
@@ -224,7 +222,7 @@ def pkl_contains_name(file_loc, name):
 def unpickle_dict(file_loc):
     file_loc = __becomes_pickle(file_loc)
     file_loc = __save_in_data(file_loc)
-    if not os.path.exists(file_loc) or os.stat(file_loc).st_size == 0:
+    if not Path.exists(file_loc) or Path.stat(file_loc).st_size == 0:
         create_file(file_loc)
         return []
     read_file = open(file_loc, "rb+")
@@ -236,7 +234,7 @@ def unpickle_dict(file_loc):
 def unpickle(file_loc):
     file_loc = __becomes_pickle(file_loc)
     file_loc = __save_in_data(file_loc)
-    if not os.path.exists(file_loc) or os.stat(file_loc).st_size == 0:
+    if not Path.exists(file_loc) or Path.stat(file_loc).st_size == 0:
         create_file(file_loc)
         return []
     file_data = []
@@ -252,10 +250,10 @@ def unpickle(file_loc):
 
 def delete(file_loc):
     file_loc = __save_in_data(file_loc)
-    if not os.path.exists(file_loc):
-        return False
-    os.remove(file_loc)
-    return True
+    if exists(file_loc):
+        Path.unlink(file_loc)
+        return True
+    return False
 
 
 def pkl_delete(file_loc):
@@ -265,9 +263,9 @@ def pkl_delete(file_loc):
 
 def save_text(file_loc, write_obj):
     file_loc = __save_in_data(file_loc)
-    if not exists(file_loc):
-        create_file(file_loc)
-    with atom(file_loc, mode='w', overwrite=True) as write_file:
+    create_folder(file_loc.parent)
+    create_file(file_loc)
+    with atom(file_loc, mode='w', encoding='utf-8', overwrite=True) as write_file:
         for bs in write_obj:
             write_file.write(str(bs))
     return True
@@ -275,23 +273,25 @@ def save_text(file_loc, write_obj):
 
 def save_img(img_loc, img):
     img_loc = __save_in_data(img_loc)
-    if not exists(img_loc):
-        if not os.path.exists(img_loc) or os.stat(img_loc).st_size == 0:
-            open(img_loc, 'wb').close()
+    create_folder(img_loc.parent)
+    create_file(img_loc)
     with atom(img_loc, mode='wb', overwrite=True) as write_file:
         for chunk in img:
             write_file.write(chunk)
     return True
 
 
-def css_exists(css_file_name):
-    if not css_file_name.startswith(CSS_LOC):
-        css_file_name = CSS_LOC + css_file_name
+def css_exists(css_file_name: str | Path):
+    if isinstance(css_file_name, str):
+        css_file_name = Path(css_file_name)
+    if not css_file_name.is_relative_to(CSS_LOC):
+        css_file_name = Path(DATA_FOLDER) / CSS_LOC / css_file_name
     return exists(css_file_name)
 
 
-def save_css(css_loc: str, css):
+def save_css(css_loc: str | Path, css):
     css_loc = __save_in_data(css_loc)
+    create_folder(css_loc.parent)
     create_file(css_loc)
     with atom(css_loc, mode='w', encoding='utf-8', overwrite=True) as write_file:
         write_file.write(css)
@@ -299,8 +299,8 @@ def save_css(css_loc: str, css):
 
 
 def pkl_test_print(file_loc):
-    file_loc = __becomes_pickle(file_loc)
     file_loc = __save_in_data(file_loc)
+    file_loc = __becomes_pickle(file_loc)
     with open(file_loc, "rb+") as pickin:
         pickin.seek(0)
         while True:

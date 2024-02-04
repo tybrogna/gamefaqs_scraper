@@ -1,8 +1,5 @@
 from threading import Event
 
-from bs4 import BeautifulSoup
-import requests
-
 import scraper_io as io
 import constants
 import progress_data_structures as ds
@@ -137,7 +134,6 @@ def run(GUI):
         count_save_data['consoles_checked'] = count_save_data['consoles_checked'] + 1
         io.pkl_save_new(COUNT_LOC, count_save_data)
     io.pkl_delete(COUNT_LOC)
-
 
 
 def verify_complete() -> bool:

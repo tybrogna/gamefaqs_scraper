@@ -1,8 +1,39 @@
+Feb 3 2024
+    continuing horror story of html guides: some html guides are not linked up with hrefs! some of them are just broken,
+    and connected by the next page button. some of the links work, but go to sections, rather than pages. it was a minor
+    nightmare to support them, but links are working on paginated guides (which they AREN'T on the actual gamefaqs
+    website, what comedy).
+    need to attend a coffee shop and test rdr2 scraping, see if the picture downloading dodges scraping bots
+    scraper_io.py
+        replaced os.path with pathlib.Path
+            pretty mad to only have found out about it now, but it _is_ better, and i already did a lot of the mental
+            heavy lifting
+       __save_in_data() doesn't try to make a folder anymore
+    progress_data_structures.py
+        GuideMetadata: added paginated and num_pages
+    constants.py
+        friendly_file_name() is a lot cooler now (unlimited args, returns a list)
+        force_save_pack() now enforces file and folder creation (instead of/in addition to in scraper_io.py)
+    main_gamefaqs_scraper.py
+        time spent scraping bug fixed
+        moved test function into scrap_code.py
+    scrap_code.py
+        file contains whatever test data i wanna run, and keeps some semblance of history (ie, i dont delete it when
+        i wanna run a new test)
+    get_guides.py
+        GuideMetadata.incomplete bug fixed
+        GuideMetadata.pagination and GuideMetadata.num_pages support added
+    html_guide_manager.py
+        css not getting loaded locally bug fixed
+        added __adjust_link_locations
+        (jeez the pagination code looks so jank, but im pretty sure its the best way to do it right now)
+
+
 Jan 30 2024
     getting code off my laptop
     NEW INFORMATION DISCOVERED
         the table of contents in HTML guides dont always work! switching over to a linear iterative way of getting
-            links based on the pagination buttons on each individual guide page.
+        links based on the pagination buttons on each individual guide page.
 
 Jan 29 2024
     constants.py
