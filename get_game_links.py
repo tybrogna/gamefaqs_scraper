@@ -7,7 +7,7 @@ import constants
 import progress_data_structures as ds
 
 
-test = False
+test = True
 kill_event = Event()
 
 
@@ -73,6 +73,8 @@ def create_page_url(console_name: str, pg_at: str) -> str:
 
 
 def get_table_size(console_name):
+    if test:
+        return 1
     paginators: list[ds.NamedNumber] = io.unpickle(constants.CONSOLE_PAGE_LENGTHS)
     for pgs in paginators:
         if pgs.name == console_name:
@@ -178,7 +180,7 @@ def print_progress():
             break
     print(f'  On step {cur_step} ({steps[cur_step].name}) of {num_steps}')
 
-
+# TODO this is bugged somehow. print_progress() is probably bugged too
 def check_full_progress() -> list[str]:
     if not io.pkl_exists(constants.CONSOLE_LINK_LIST_LOC):
         return ['Console Link Save File, doesn\'t exist, not started']

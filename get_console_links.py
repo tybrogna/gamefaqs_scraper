@@ -6,8 +6,8 @@ import progress_data_structures as ds
 
 COUNT_LOC = 'get_console_links_count'
 test = True
-test_limit = False
-test_wiiu = True
+test_limit = True
+test_wiiu = False
 kill_event = Event()
 
 
@@ -116,9 +116,6 @@ def run(GUI):
             continue
         # link is confirmed from here on
         name = get_name_from_link(console_link)
-        # console_link_save_data = ds.SaveData(file_loc=constants.CONSOLE_LINK_LIST_LOC,
-        #                                      blob=ds.LinkStep(name, link=console_link, completion=False),
-        #                                      file_type='pickle')
         console_link_save_data = ds.SaveData(file_loc=constants.CONSOLE_LINK_LIST_LOC,
                                              blob=ds.FileStep(name, link=console_link, completion=False),
                                              file_type='pickle')

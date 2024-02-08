@@ -61,7 +61,7 @@ class FileStep(SaveName):
         return self.name == other.name
 
     def __str__(self):
-        return f"File Step {self.name} \n    {self.save_loc},\n    {self.link},\n    {"Finished" if self.completion else "Incomplete"}"
+        return f"File Step - {self.name} - {"O Finished" if self.completion else "X Incomplete"}\n    {self.save_loc},\n    {self.link}"
 
 
 # class LinkStep(SaveName):
@@ -99,6 +99,7 @@ class NamedNumber:
 class GuideMetadata:
     def __init__(self):
         self.link = ''
+        self.id = ''
         self.game = ''
         self.title = ''
         self.author = ''
@@ -109,7 +110,9 @@ class GuideMetadata:
         self.incomplete = False
         self.award = False
         self.link = ''
-        self.html = False
+        self.__guide_type = ''
+        self.html = (lambda: self.__guide_type == 'html')()  # self executing anon function! nice!
+        self.map = (lambda: self.__guide_type == 'map')()
         self.paginated = False
         self.num_pages = 0
 

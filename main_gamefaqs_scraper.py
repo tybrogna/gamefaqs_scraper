@@ -37,10 +37,9 @@ def get_progress_steps() -> list[ds.MainStep]:
 
 
 def check_progress(step_name):
-    # print("checking {0} step".format(step_name))
     return io.pkl_contains_name("progress", step_name).completion
 
-
+# TODO make this print the total time taken
 def check_full_progress():
     ret_strs = []
     if not GUI.save_loc.get() or GUI.save_loc.get() == '':
@@ -135,6 +134,9 @@ def run_cleanup(GUI, start_time=0.):
     else:
         timing_dict = {'total_time': time_taken, 'wait_time': spent_waiting}
         io.pkl_save_new(constants.TIME_LOC, timing_dict)
+    complete = True
+    for step in get_progress_steps():
+        complete &= check_progress(step.name)
 
 
 def run():

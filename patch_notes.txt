@@ -1,3 +1,30 @@
+Feb 8 2024
+    felt like a good stopping point. got other things i need to do today, and the ski trip is tomorrow
+    switched os.path to pathlib.Path. its crazy how easy it was to replace, and amazing how much mental work it takes
+        off for managing paths. wish i knew about it months ago
+    these patch notes look suspiciously like the patch notes from Feb 3. ill have the groblins look into it
+    constants.py
+        added display(), for testing purposes. shoulda done it a long time ago
+        added local_soup(), for link adjustment
+        added __save_pack_file_prep(), to reduce bugs between force_save_pack() and force_save_pack_sync()
+            should probably make __saved_future() a shared function too, for the same reason
+        friendly_file_name() now takes at least a str or a list
+    progress_data_structures.py
+        added __guide_type, html, and map to GuideMetatdata
+            can hold more mutually exclusive guide types, without tripping over them
+            there probably is a html map somewhere on that fucking site. i should check
+    scraper_io.py
+        removed all instances of os.path with pathlib.Path
+        there's a bug somewhere that creates files in the project path, even though i tried to make everything go to
+            the data save path no matter what. gotta fix
+    get_guides.py
+        now downloads map images (poorly!)
+        added create_guide_save_data(), returns SaveData of a text guide or map image
+        fixed crash where checking incompleteness would fail for multiple elements with .ital
+        pagination checking happens after guide step creation, less pretty but works way better
+            removed __get_pagination_link as a consequence
+
+
 Feb 3 2024
     continuing horror story of html guides: some html guides are not linked up with hrefs! some of them are just broken,
     and connected by the next page button. some of the links work, but go to sections, rather than pages. it was a minor

@@ -31,15 +31,6 @@ def __create_html_guide_steps(pkl_name: str, base_url: str, page_soup: Beautiful
     return html_guide_steps
 
 
-def __get_pagination_link(page_soup: BeautifulSoup) -> str:
-    for link in page_soup.select('ul.paginate a'):
-        for s in link.strings:
-            if "next page" in str.lower(s):
-                return link['href']
-            if "last page" in str.lower(s):
-                return link['href']
-
-
 def __get_css_name(soup) -> str:
     """
     Returns the string name of the css file marked the core_css on the soup page
@@ -146,6 +137,7 @@ def __adjust_link_locations(guide_metadata: ds.GuideMetadata):
     for file in Path.iterdir(html_loc):
         if Path(html_loc, file).is_dir():
             continue
+        print(file)
         loc_soup = constants.local_soup(file)
         toc = loc_soup.select('.ftoc li a')
         for name in href_names:
@@ -163,7 +155,7 @@ def __adjust_image_locations(page_content: Tag):
         img['src'] = 'img/' + img_name
 
 
-def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.GuideMetadata, base_url: str):
+def save_guide(guide_metadata: ds.GuideMetadata, base_url: str):
     """
     Creates list of savable data packs for all the data found on the guide page (html content, images, css)
 
@@ -175,14 +167,15 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.GuideMetadata, base_
     if kill_event.is_set():
         print('html guides dying')
         return
-    page_step_pkl_name = guide_metadata.game[0:3] + guide_metadata.author[0:3] + '_html_steps'
+    # page_step_pkl_name = guide_metadata.game[0:3] + guide_metadata.author[0:3] + '_html_steps'
+    page_step_pkl_name = guide_metadata.id + '_html_steps'
     page_steps: list[ds.FileStep] = io.unpickle(page_step_pkl_name)
     if not page_steps:
         page_soup = constants.heat_soup(base_url)
         page_steps: list[ds.FileStep] = __create_html_guide_steps(pkl_name=page_step_pkl_name,
-                                                                       base_url=base_url,
-                                                                       page_soup=page_soup,
-                                                                       guide_metadata=guide_metadata)
+                                                                  base_url=base_url,
+                                                                  page_soup=page_soup,
+                                                                  guide_metadata=guide_metadata)
     for st_at, step in enumerate(page_steps):
         if kill_event.is_set():
             print('html guides dying')
@@ -191,12 +184,9 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.GuideMetadata, base_
             continue
         guide_save_pack = []
         page_soup = constants.heat_soup(step.link)
-        # if st_at < len(page_steps):
-        #     next_step = page_steps[st_at + 1]
-        #     next_step.link = base_url + __get_pagination_link(page_soup)
-        #TODO get page name for paginated links (bayo2, amazing spider-man)
         if guide_metadata.paginated:
             toc_link_list = page_soup.select('#faqwrap .ftoc a')
+            step.name = f'{st_at} Walkthrough'
             if len(toc_link_list) == guide_metadata.num_pages:
                 step.name = f'{st_at} {toc_link_list[st_at].string}'
                 step.name = constants.friendly_file_name(step.name)
@@ -226,6 +216,5 @@ def save_guide(page_soup: BeautifulSoup, guide_metadata: ds.GuideMetadata, base_
                                          file_type='pickle')
         guide_save_pack.append(page_progress_data)
         constants.force_save_pack(*guide_save_pack)
-    #TODO this is adding 'html' at the top and removoing the <doctype> somehow
     __adjust_link_locations(guide_metadata)
     io.pkl_delete(page_step_pkl_name)

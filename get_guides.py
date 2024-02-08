@@ -65,20 +65,23 @@ def true_get_guide_metadata(page_soup):
         md = ds.GuideMetadata()
         pg_title = page_soup.select_one('.page-title').string
         md.game = pg_title[:pg_title.rindex(' Guides and FAQs')-2]
-        print(md.game)
+        # print(md.game)
         md.title = square.select_one('a.bold').string
         md.platform = square['data-platform']
-        print(md.platform)
+        # print(md.platform)
         md.link = square.select_one('a.bold')['href']
-        print(md.link)
+        if md.link.split('/')[-2] == 'map':
+            md.__guide_type = 'map'
+        # print(md.link)
         for author in square.select('span a'):
             md.author += author.string + ' and '
         md.author = md.author[:-5]
-        print(md.author)
-        ital_text = square.select('.ital')
-        for it in ital_text:
-            if 'incomplete' in str.lower(it.string):
-                md.incomplete = True
+        # print(md.author)
+        ital_eles = square.select('.ital')
+        for ele in ital_eles:
+            for ital in ele.strings:
+                if 'incomplete' in str.lower(ital):
+                    md.incomplete = True
         for flair in square.select('.flair'):
             if flair.string == 'HTML':
                 md.html = True
@@ -107,33 +110,6 @@ def get_all_guide_links(page_soup):
     if len(guide_links) < 0:
         return
     return guide_links
-
-
-def old_get_guide_metadata(page_soup):
-    guide_metadata = ds.GuideMetadata()
-    if page_soup.select_one('#faqwrap .ftoc a') is not None:
-        guide_metadata.html = True
-    title_platform_author = page_soup.select_one('div.ffaq h2').get_text()
-    title_platform = title_platform_author[:title_platform_author.rindex(' by ')]
-    guide_metadata.platform = title_platform[title_platform.rindex('(') + 1:title_platform.rindex(')')]
-    guide_metadata.title = title_platform[:title_platform.rindex(' (')]
-    guide_metadata.author = title_platform_author[title_platform_author.rindex(' by ') + 4:]
-    # print(f'title: {guide_metadata.title}')
-    if guide_metadata.html:
-        guide_metadata.game = page_soup.select_one('.platform-title :first-child').string
-        guide_metadata.game = guide_metadata.game[:guide_metadata.game.rindex(' ')]
-    else:
-        guide_metadata.game = page_soup.select_one('.page-title').string
-        # print(f'pagetitlestr: {guide_metadata.game}')
-        guide_metadata.game = guide_metadata.game[:guide_metadata.game.rindex(guide_metadata.title)-3]
-        # print(f'game: {guide_metadata.game}')
-    ver_and_date = page_soup.select_one('div.ffaq p').get_text()
-    if 'Version' in ver_and_date:
-        guide_metadata.version = ver_and_date[ver_and_date.index('Version:'):ver_and_date.index(' |')]
-    guide_metadata.year = ver_and_date[ver_and_date.rindex('/') + 1:]
-    if not page_soup.select_one('i.fa-star') is None:
-        guide_metadata.starred = True
-    return guide_metadata
 
 
 def get_game_aliases(page_soup):
@@ -165,14 +141,43 @@ def create_alias_save_data(alias_url_list):
     return alias_sd_list
 
 
-def get_guide_text(page_soup):
-    guide_text = page_soup.select('#faqtext pre')
-    guide_text_list = []
-    if guide_text is not None:
-        for gt in guide_text:
-            guide_text_list.append(gt.contents)
-    new_save = ds.SaveData(blob=guide_text_list, file_type='text')
-    return new_save
+def create_guide_save_data(guide_soup: BeautifulSoup, guide_metadata: ds.GuideMetadata) -> ds.SaveData:
+    if guide_metadata.map:
+        img_src = guide_soup.select_one('#gf_map')['src']
+        if img_src is None:
+            return None
+        guide_data = ds.SaveData(blob=constants.url_request_blob(img_src),
+                               file_type='image')
+    else:
+        guide_text_elements = guide_soup.select('#faqtext pre')
+        if guide_text_elements is None:
+            return None
+        guide_text = ''.join([ele.string for ele in guide_text_elements])
+        guide_text = guide_text.replace('\r', '')
+        # TODO determine data type of the map, save with appropriate file suffix
+        guide_data = ds.SaveData(blob=guide_text, file_type='text')
+    guide_data.file_loc = Path(*constants.friendly_file_name(
+        guide_metadata.game, guide_metadata.save_title()))
+    return guide_data
+
+
+# def get_guide_text(guide_soup: BeautifulSoup) -> ds.SaveData:
+#     guide_text_elements = guide_soup.select('#faqtext pre')
+#     if guide_text_elements is not None:
+#         guide_text = ''.join([ele.string for ele in guide_text_elements])
+#         guide_text = guide_text.replace('\r', '')
+#         new_save = ds.SaveData(blob=guide_text, file_type='text')
+#         return new_save
+#     return None
+#
+#
+# def get_map_image(guide_soup: BeautifulSoup) -> ds.SaveData:
+#     img_src = guide_soup.select_one('#gf_map')['src']
+#     if img_src is not None:
+#         new_save = ds.SaveData(blob=constants.url_request_blob(img_src),
+#                                file_type='image')
+#         return new_save
+#     return None
 
 
 def create_dl_steps(game_id, guide_metadatas) -> list[ds.FileStep]:
@@ -210,9 +215,7 @@ def run(GUI):
             game_soup: BeautifulSoup = constants.heat_soup(game_url)
             guide_metadatas = true_get_guide_metadata(game_soup)
             alias_url_list = get_game_aliases(game_soup)
-            print(alias_url_list)
-            # guide_links_list = get_all_guide_links(game_soup)
-            guide_dl_steps = create_dl_steps(game.name, guide_metadatas)
+            guide_dl_steps: list[ds.FileStep] = create_dl_steps(game.name, guide_metadatas)
             for guide_step, guide_metadata in zip(guide_dl_steps, guide_metadatas):
                 if guide_step.completion:
                     continue
@@ -220,6 +223,8 @@ def run(GUI):
                     print('get guides dying')
                     return
                 guide_url = constants.URL_gamefaqs + guide_step.link
+                # https://gamefaqs.gamespot.com/x/[game_id]-[game_url_name]/[faqs | map]/[guide_id]
+                guide_metadata.id = guide_step.link[guide_step.link.rindex('/')+1:]
                 guide_soup = constants.heat_soup(guide_url)
                 is_guide = guide_soup.select_one('div.ffaq') is not None
                 if not is_guide:
@@ -236,17 +241,13 @@ def run(GUI):
                                                   old_blob_for_overwrite=guide_step,
                                                   file_type='pickle')
                 if guide_metadata.html:
-                    html_guide_manager.save_guide(guide_soup, guide_metadata, guide_url)
+                    html_guide_manager.save_guide(guide_metadata, guide_url)
                     constants.force_save_pack(guide_progress_data, *alias_data_list)
                 else:
-                    guide_data = get_guide_text(guide_soup)
-                    guide_data.file_loc = Path(*constants.friendly_file_name(
-                            guide_metadata.game, guide_metadata.save_title()))
-                    guide_progress_data = ds.SaveData(file_loc=game.name,
-                                                      blob=guide_step.save_new_completion(),
-                                                      old_blob_for_overwrite=guide_step,
-                                                      file_type='pickle')
+                    guide_data = create_guide_save_data(guide_soup, guide_metadata)
                     constants.force_save_pack(guide_data, guide_progress_data, *alias_data_list)
+            # below, this point means all guides have been saved
+            # mark game as complete and delete guide progress tracker file
             game_progress_data = ds.SaveData(file_loc=console.save_loc,
                                              blob=game.save_new_completion(),
                                              old_blob_for_overwrite=game,
@@ -257,7 +258,7 @@ def run(GUI):
 
 
 def verify_complete():
-    console_steps = create_console_steps(constants.CONSOLE_LINK_LIST_LOC)
+    console_steps = create_console_steps(constants.CONSOLE_LINK_FOR_GUIDES)
     for console in console_steps:
         game_steps = create_game_steps(console.save_loc)
         for game in game_steps:
@@ -268,9 +269,9 @@ def verify_complete():
 
 def check_full_progress() -> list[str]:
     str_arr = []
-    if not io.pkl_exists(constants.CONSOLE_LINK_LIST_LOC):
+    if not io.pkl_exists(constants.CONSOLE_LINK_FOR_GUIDES):
         return ['Console Link Save File, doesn\'t exist, not started']
-    console_steps = create_console_steps(constants.CONSOLE_LINK_LIST_LOC)
+    console_steps = create_console_steps(constants.CONSOLE_LINK_FOR_GUIDES)
     num_consoles = len(console_steps)
     for console_idx, console in enumerate(console_steps):
         if not io.pkl_exists(console.save_loc):

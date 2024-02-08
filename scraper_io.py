@@ -87,11 +87,6 @@ def create_file(file_loc: str | Path) -> bool:
     return False
 
 
-def create_pkl(file_loc):
-    file_loc = __becomes_pickle(file_loc)
-    return create_file(file_loc)
-
-
 def exists(file_loc: str | Path):
     file_loc = __save_in_data(file_loc)
     if not Path.exists(file_loc):

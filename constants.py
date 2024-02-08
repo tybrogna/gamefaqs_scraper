@@ -36,7 +36,14 @@ URL_css = '/a/css'
 CONSOLE_EXCLUDE = ['ps2', 'gc', 'xbox', 'game_boy']
 GUI: gui_manager.Gui = None
 session_waits: int = 0
-speed_mode = False
+speed_mode = True
+
+
+def display(*msgs):
+    if GUI:
+        GUI.display(*msgs)
+    else:
+        print(msgs)
 
 
 def heat_soup(url: str) -> BeautifulSoup:
@@ -48,22 +55,22 @@ def heat_soup(url: str) -> BeautifulSoup:
     """
     random_header = HEADERS[random.randrange(0, len(HEADERS))]
     r_num = random.randrange(3, 15)
-    if GUI:
-        GUI.display(f'{r_num} second wait...')
+    display(f'{r_num} second wait...')
     global session_waits
     session_waits = session_waits + r_num
     if not speed_mode:
         time.sleep(r_num)
     req = requests.get(url, headers=random_header)
-    if GUI:
-        GUI.display(str(req.status_code) + " from " + url)
+    display(str(req.status_code) + " from " + url[len(URL_gamefaqs):])
     print(str(req.status_code) + " from " + url)
-    return BeautifulSoup(req.text, "html.parser")
+    return BeautifulSoup(req.content, "html.parser")
 
 
 def local_soup(path) -> BeautifulSoup:
-    tg = open(path, 'r')
-    return BeautifulSoup(tg, "html.parser")
+    tg = open(path, 'rb')
+    soup = BeautifulSoup(tg, "html.parser")
+    tg.close()
+    return soup
 
 
 def url_request_blob(url: str) -> requests.Response:
@@ -74,15 +81,7 @@ def url_request_blob(url: str) -> requests.Response:
     return req
 
 
-# def friendly_file_name(file_loc):
-#     file_loc = file_loc.replace(':', ' -') \
-#                        .replace('/', ', ') \
-#                        .replace('\\', ', ')
-#     file_loc = re.sub('[<>*?"|]', '', file_loc)
-#     return file_loc
-
-
-def friendly_file_name(file_loc, *other_locs):
+def friendly_file_name(file_loc, *other_locs) -> str | list[str]:
     file_loc = file_loc.replace(':', ' -') \
                        .replace('/', ', ') \
                        .replace('\\', ', ')
@@ -125,20 +124,40 @@ def time_to_hms_string(t: float) -> str:
     return f'{hrs}:{mins}:{secs}'
 
 
+def __save_pack_file_prep(*save_pack: SaveData) -> None:
+    for save in filter(None, save_pack):
+        save.file_loc = io.__save_in_data(save.file_loc)
+        if save.file_type == 'pickle':
+            save.file_loc = io.__becomes_pickle(save.file_loc)
+        if type(save.blob) is int:
+            save.blob = str(save.blob)
+        if type(save.old_blob_for_overwrite) is int:
+            save.old_blob_for_overwrite = str(save.old_blob_for_overwrite)
+        if not save.file_type == 'delete':
+            io.create_folder(save.file_loc.parent)
+            io.create_file(save.file_loc)
+
+
 def force_save_pack_sync(*save_pack: SaveData):
     queue_interrupt = False
     interrupt_count = 0
     saves_count = 0
 
-    for save in save_pack:
-        if type(save.blob) is int:
-            save.blob = str(save.blob)
-        if type(save.old_blob_for_overwrite) is int:
-            save.old_blob_for_overwrite = str(save.old_blob_for_overwrite)
+    __save_pack_file_prep(*save_pack)
+    # for save in save_pack:
+    #     save.file_loc = io.__save_in_data(save.file_loc)
+    #     if save.file_type == 'pickle':
+    #         save.file_loc = io.__becomes_pickle(save.file_loc)
+    #     if type(save.blob) is int:
+    #         save.blob = str(save.blob)
+    #     if type(save.old_blob_for_overwrite) is int:
+    #         save.old_blob_for_overwrite = str(save.old_blob_for_overwrite)
+    #     if not save.file_type == 'delete':
+    #         io.create_folder(save.file_loc.parent)
+    #         io.create_file(save.file_loc)
 
     while saves_count < len(save_pack):
         try:
-            time.sleep(.3)
             save = save_pack[saves_count]
             if save.file_type == 'pickle':
                 if save.old_blob_for_overwrite is not None:
@@ -151,6 +170,8 @@ def force_save_pack_sync(*save_pack: SaveData):
                 done = io.save_img(save.file_loc, save.blob)
             elif save.file_type == 'css':
                 done = io.save_css(save.file_loc, save.blob)
+            elif save.file_type == 'delete':
+                done = io.pkl_delete(save.file_loc)
             else:
                 done = io.save_text(save.file_loc, save.blob)
             if done:
@@ -172,27 +193,31 @@ def force_save_pack_sync(*save_pack: SaveData):
 
 
 def force_save_pack(*save_pack: SaveData):
-    for save in save_pack:
-        save.file_loc = io.__save_in_data(save.file_loc)
-        if type(save.blob) is int:
-            save.blob = str(save.blob)
-        if type(save.old_blob_for_overwrite) is int:
-            save.old_blob_for_overwrite = str(save.old_blob_for_overwrite)
-        io.create_folder(save.file_loc.parent)
-        io.create_file(save.file_loc)
+    __save_pack_file_prep(*save_pack)
+    # for save in save_pack:
+    #     save.file_loc = io.__save_in_data(save.file_loc)
+    #     if save.file_type == 'pickle':
+    #         save.file_loc = io.__becomes_pickle(save.file_loc)
+    #     if type(save.blob) is int:
+    #         save.blob = str(save.blob)
+    #     if type(save.old_blob_for_overwrite) is int:
+    #         save.old_blob_for_overwrite = str(save.old_blob_for_overwrite)
+    #     if not save.file_type == 'delete':
+    #         io.create_folder(save.file_loc.parent)
+    #         io.create_file(save.file_loc)
 
     with ThreadPoolExecutor(max_workers=8) as pool:
         finished_futures = []
-        for save in save_pack:
+        for save in filter(None, save_pack):
             finished_futures.append(pool.submit(__saved_future, save))
         for future in finished_futures:
             try:
                 future.result()
             except Exception:
-                print(f'couldn\'t save something')
+                future.exception()
                 _thread.interrupt_main()
 
-
+# TODO make this a shared function to reduce rewrites and bugs between force_save_pack() and force_save_pack_sync()
 def __saved_future(save: SaveData) -> bool:
     if save.file_type == 'pickle':
         if save.old_blob_for_overwrite is not None:
