@@ -111,14 +111,36 @@ class GuideMetadata:
         self.award = False
         self.link = ''
         self.__guide_type = ''
-        self.html = (lambda: self.__guide_type == 'html')()  # self executing anon function! nice!
-        self.map = (lambda: self.__guide_type == 'map')()
+        self.map_image_type = ''
+        # self.html = (lambda: self.__guide_type == 'html')()  # self executing anon function! nice!
+        # self.map = (lambda: self.__guide_type == 'map')()
         self.paginated = False
         self.num_pages = 0
 
-    def save_title(self):
+    @property
+    def html(self) -> bool:
+        return self.__guide_type == 'html'
+
+    @html.setter
+    def html(self, is_html: bool):
+        self.__guide_type = 'html' if is_html is True else 'text'
+
+    @property
+    def map(self) -> bool:
+        return self.__guide_type == 'map'
+
+    @map.setter
+    def map(self, is_map: bool):
+        self.__guide_type = 'map' if is_map is True else 'text'
+
+    def save_title(self) -> str:
         star_ornament = '[!] ' if self.starred else ''
-        return f'{star_ornament}{self.author} - {self.title} ({self.platform})'
+        ext = 'txt'
+        if self.html:
+            ext = 'html'
+        if self.map:
+            ext = self.map_image_type
+        return f'{star_ornament}{self.author} - {self.title} ({self.platform}).{ext}'
 
     def __str__(self):
         return f'{self.title} by {self.author} for {self.platform}, {self.version}, {self.year}'

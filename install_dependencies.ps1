@@ -12,7 +12,10 @@ try {
     py -m ensurepip --upgrade
 }
 
+python.exe -m pip install --upgrade pip
+
 pip install flake8
 pip install requests
 pip install bs4
 pip install atomicwrites
+pip install pillow

@@ -17,9 +17,7 @@ def __html_guides():
 
 
 def __print_pkls():
-    io.pkl_test_print('D:\\gamefaqs\\progress')
-    io.pkl_test_print('D:\\gamefaqs\\wii-u_game_list')
-    io.pkl_test_print('D:\\gamefaqs\\wii-u_game_list')
+    io.pkl_test_print('D:\\gamefaqs\\console_link_list_2')
 
 
 def __friendly_filename():
@@ -140,14 +138,30 @@ def __get_guide_text():
         constants.force_save_pack(new_save)
 
 
+from io import BytesIO
+from io import open
+from PIL import Image
 def __save_map():
-    soup = constants.heat_soup('https://gamefaqs.gamespot.com/3ds/647587-3d-classics-kid-icarus/map/126-labyrinth-map-1')
-    img_src = constants.URL_gamefaqs + soup.select_one('#gf_map')['src']
+    # soup = constants.heat_soup('https://gamefaqs.gamespot.com/3ds/647587-3d-classics-kid-icarus/map/126-labyrinth-map-1')
+    soup = constants.heat_soup('https://en.wikipedia.org/wiki/Time_Cube')
+    # img_src = soup.select_one('#gf_map')['src']
+    img_src = soup.select_one('.mw-file-element')['src']
     if img_src is None:
         return None
-    guide_data = ds.SaveData(file_loc=scrap_path,
-                             blob=constants.url_request_blob(img_src),
+    img_blob = constants.url_request_blob('https:' + img_src)
+    print(len(img_blob.content))
+    bio = BytesIO()
+    for chunk in img_blob:
+        bio.write(chunk)
+    bio.seek(0)
+    pil_img = Image.open(bio)
+    print(str.lower(pil_img.format))
+    print(pil_img.size)
+    pil_img.seek(0)
+    guide_data = ds.SaveData(file_loc=scrap_path.with_suffix('.' + str.lower(pil_img.format)),
+                             blob=bio.getbuffer(),
                              file_type='image')
+    pil_img.close()
     constants.force_save_pack(guide_data)
 
 
@@ -274,4 +288,4 @@ def __undo_last_failure():
 
 
 def test():
-    __save_map()
+    __print_pkls()

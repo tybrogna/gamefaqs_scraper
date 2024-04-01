@@ -271,8 +271,9 @@ def save_img(img_loc, img):
     create_folder(img_loc.parent)
     create_file(img_loc)
     with atom(img_loc, mode='wb', overwrite=True) as write_file:
-        for chunk in img:
-            write_file.write(chunk)
+        write_file.write(img)
+        # for chunk in img:
+        #     write_file.write(chunk)
     return True
 
 

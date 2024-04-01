@@ -145,21 +145,24 @@ def verify_complete() -> bool:
 
 def check_full_progress() -> list[str]:
     """
-
+    Checks the progress of the steps contained in this module
+    :return: list of strings to display to the GUI describing progress
     """
+    ret_strs: list[str] = []
     if io.pkl_exists(constants.CONSOLE_LINK_LIST_LOC) and not io.pkl_exists(COUNT_LOC):
         links = io.unpickle(constants.CONSOLE_LINK_LIST_LOC)
-        return [f'  COMPLETE  ',
-                f'All Steps Complete, {len(links)} consoles saved']
+        ret_strs.append(f'  COMPLETE  ')
+        ret_strs.append(f'All Steps Complete, {len(links)} consoles saved')
+        return ret_strs
     if not io.pkl_exists(COUNT_LOC):
         return ['Page at save file not created yet']
     count_save_data = io.unpickle_dict(COUNT_LOC)
-    print(count_save_data)
     count_checked = count_save_data['consoles_checked']
     count_total = count_save_data['all_potential_consoles']
     saved_links = io.unpickle(constants.CONSOLE_LINK_LIST_LOC)
     last_link = None
     if len(saved_links) > 0:
         last_link = saved_links[-1].name
-    return [f'  On step {count_checked} of {count_total}',
-            f'  Last saved console link: {last_link}']
+    ret_strs.append(f'On step {count_checked} of {count_total}')
+    ret_strs.append(f'  Last saved console link: {last_link}')
+    return ret_strs

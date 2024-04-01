@@ -180,27 +180,31 @@ def print_progress():
             break
     print(f'  On step {cur_step} ({steps[cur_step].name}) of {num_steps}')
 
-# TODO this is bugged somehow. print_progress() is probably bugged too
+
 def check_full_progress() -> list[str]:
+    """
+    Checks the progress of the steps contained in this module
+    :return: list of strings to display to the GUI describing progress
+    """
+    ret_strs: list[str] = []
     if not io.pkl_exists(constants.CONSOLE_LINK_LIST_LOC):
         return ['Console Link Save File, doesn\'t exist, not started']
     steps = io.unpickle(constants.CONSOLE_LINK_LIST_LOC)
-    if len(steps) == 0:
-        return ['No Links in the Console Link Save File, not finished or not started']
     num_steps = len(steps)
-    cur_step = 0
-    for idx, step in enumerate(steps):
-        if not step.completion:
-            cur_step = idx
-            break
-    ret_strs: list[str] = [f'On step {cur_step} ({steps[cur_step].name}) of {num_steps}']
-    if not io.pkl_exists(steps[cur_step].name + '_page_at'):
+    if num_steps == 0:
+        return ['No Links in the Console Link Save File, not finished or not started']
+    cur_step_idx, cur_step = constants.get_first_match(lambda idx, ele: not ele.completion, steps)
+    if cur_step_idx is None and cur_step is None:
+        ret_strs.append(f'All Steps Complete, {num_steps} consoles saved')
+        return ret_strs
+    ret_strs.append(f'On step {cur_step_idx} ({cur_step.name}) of {num_steps}')
+    if not io.pkl_exists(cur_step.name + '_page_at'):
         ret_strs.append(f'No game pages scanned yet')
         return ret_strs
-    pg_at = io.unpickle(steps[cur_step].name + '_page_at')[0]
+    pg_at = io.unpickle(cur_step.name + '_page_at')[0]
     ret_strs.append(f'On page {pg_at}')
-    if not io.pkl_exists(steps[cur_step].name + '_game_list'):
+    if not io.pkl_exists(cur_step.name + '_game_list'):
         ret_strs.append(f'No game links found yet')
-    num_games_saved = len(io.unpickle(steps[cur_step].name + '_game_list'))
+    num_games_saved = len(io.unpickle(cur_step.name + '_game_list'))
     ret_strs.append(f'{num_games_saved} game links found so far')
     return ret_strs

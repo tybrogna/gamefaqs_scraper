@@ -67,8 +67,7 @@ def __get_page_metadata(guide_metadata: ds.GuideMetadata, page_name) -> ds.PageM
     return page_metadata
 
 
-def __create_html_save_data(page_metadata: ds.PageMetadata, css_name: str, page_content)\
-        -> ds.SaveData:
+def __create_html_save_data(page_metadata: ds.PageMetadata, css_name: str, page_content) -> ds.SaveData:
     """
     Creates a savable data pack for the full html of the guide
 

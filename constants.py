@@ -1,8 +1,12 @@
 import _thread
+import typing
+
 import requests
 import random
 import math
 import re
+
+import progress_data_structures as ds
 import scraper_io as io
 from bs4 import BeautifulSoup
 import time
@@ -36,7 +40,7 @@ URL_css = '/a/css'
 CONSOLE_EXCLUDE = ['ps2', 'gc', 'xbox', 'game_boy']
 GUI: gui_manager.Gui = None
 session_waits: int = 0
-speed_mode = True
+speed_mode = False
 
 
 def display(*msgs):
@@ -99,6 +103,20 @@ def friendly_file_name(file_loc, *other_locs) -> str | list[str]:
         return ret_file_locs
 
 
+def get_first_match(operation: typing.Callable, steps: list[ds.FileStep]) -> tuple[int, ds.FileStep]:
+    """
+    Gets the first element in ds.FileStep list steps that matches the Callable operation
+    If (None, None) returned, end of the list was reached.
+
+    :param operation: Callable to run on each index and element of the steps param
+    :param steps: List to run Callable operation on
+    :return: tuple (index, element) of the list that first matches param operation, (None, None) if no match
+    """
+    return next(
+        ((idx, element) for idx, element in enumerate(steps) if operation(idx, element)),
+        (None, None))
+
+
 def text_before_last_slash(text: str) -> str:
     if '/' in text:
         return text[:text.rindex('/')]
@@ -117,11 +135,13 @@ def text_after_last_slash(text: str) -> str:
 
 def time_to_hms_string(t: float) -> str:
     hrs = math.floor(t / 3600)
+    hrs_str = '{:2.f}'.format(hrs)
     t -= hrs * 3600
     mins = math.floor(t / 60)
+    mins_str = '{:2.f}'.format(mins)
     t -= mins * 60
     secs = '{:.1f}'.format(t)
-    return f'{hrs}:{mins}:{secs}'
+    return f'{hrs_str}:{mins_str}:{secs}'
 
 
 def __save_pack_file_prep(*save_pack: SaveData) -> None:

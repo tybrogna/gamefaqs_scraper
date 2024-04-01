@@ -1,5 +1,7 @@
 from pathlib import Path
 from threading import Event
+from PIL import Image
+from io import BytesIO
 
 import html_guide_manager
 import scraper_io as io
@@ -71,7 +73,7 @@ def true_get_guide_metadata(page_soup):
         # print(md.platform)
         md.link = square.select_one('a.bold')['href']
         if md.link.split('/')[-2] == 'map':
-            md.__guide_type = 'map'
+            md.map = True
         # print(md.link)
         for author in square.select('span a'):
             md.author += author.string + ' and '
@@ -90,10 +92,15 @@ def true_get_guide_metadata(page_soup):
 
 
 def finish_metadata(page_soup, md):
-    ver_and_date = page_soup.select_one('div.ffaq p').get_text()
-    if 'Version' in ver_and_date:
-        md.version = ver_and_date[ver_and_date.index('Version:'):ver_and_date.index(' |')]
-    md.year = ver_and_date[ver_and_date.rindex('/') + 1:]
+    if md.map:
+        map_date = page_soup.select_one('#map_block h4').text
+        md.year = map_date[map_date.rindex('/') + 1:]
+    else:
+        ver_and_date = page_soup.select_one('div.ffaq p').get_text()
+        if 'Version' in ver_and_date:
+            md.version = ver_and_date[ver_and_date.index('Version:'):ver_and_date.index(' |')]
+        if 'Updated' in ver_and_date:
+            md.year = ver_and_date[ver_and_date.rindex('/') + 1:]
     if not page_soup.select_one('i.fa-star') is None:
         md.starred = True
     if md.html:
@@ -143,21 +150,27 @@ def create_alias_save_data(alias_url_list):
 
 def create_guide_save_data(guide_soup: BeautifulSoup, guide_metadata: ds.GuideMetadata) -> ds.SaveData:
     if guide_metadata.map:
-        img_src = guide_soup.select_one('#gf_map')['src']
+        img_src = constants.URL_gamefaqs + guide_soup.select_one('#gf_map')['src']
         if img_src is None:
             return None
-        guide_data = ds.SaveData(blob=constants.url_request_blob(img_src),
-                               file_type='image')
+        img_blob = constants.url_request_blob(img_src)
+        img_as_bio = BytesIO()
+        for chunk in img_blob:
+            img_as_bio.write(chunk)
+        img_as_bio.seek(0)
+        with Image.open(img_as_bio) as pil:
+            guide_metadata.map_image_type = str.lower(pil.format)
+        guide_data = ds.SaveData(blob=img_as_bio.getbuffer(),
+                                 file_type='image')
     else:
         guide_text_elements = guide_soup.select('#faqtext pre')
         if guide_text_elements is None:
             return None
         guide_text = ''.join([ele.string for ele in guide_text_elements])
         guide_text = guide_text.replace('\r', '')
-        # TODO determine data type of the map, save with appropriate file suffix
         guide_data = ds.SaveData(blob=guide_text, file_type='text')
-    guide_data.file_loc = Path(*constants.friendly_file_name(
-        guide_metadata.game, guide_metadata.save_title()))
+    guide_data.file_loc = \
+        Path(*constants.friendly_file_name(guide_metadata.game, guide_metadata.save_title()))
     return guide_data
 
 
@@ -226,14 +239,14 @@ def run(GUI):
                 # https://gamefaqs.gamespot.com/x/[game_id]-[game_url_name]/[faqs | map]/[guide_id]
                 guide_metadata.id = guide_step.link[guide_step.link.rindex('/')+1:]
                 guide_soup = constants.heat_soup(guide_url)
-                is_guide = guide_soup.select_one('div.ffaq') is not None
-                if not is_guide:
-                    guide_progress_data = ds.SaveData(file_loc=game.name,
-                                                      blob=guide_step.save_new_completion(),
-                                                      old_blob_for_overwrite=guide_step,
-                                                      file_type='pickle')
-                    constants.force_save_pack(guide_progress_data)
-                    continue
+                # is_guide = guide_soup.select_one('div.ffaq') is not None
+                # if not is_guide:
+                #     guide_progress_data = ds.SaveData(file_loc=game.name,
+                #                                       blob=guide_step.save_new_completion(),
+                #                                       old_blob_for_overwrite=guide_step,
+                #                                       file_type='pickle')
+                #     constants.force_save_pack(guide_progress_data)
+                #     continue
                 finish_metadata(guide_soup, guide_metadata)
                 alias_data_list = create_alias_save_data(alias_url_list)
                 guide_progress_data = ds.SaveData(file_loc=game.name,
@@ -268,29 +281,32 @@ def verify_complete():
 
 
 def check_full_progress() -> list[str]:
+    """
+    Checks the progress of the steps contained in this module
+    :return: list of strings to display to the GUI describing progress
+    """
     str_arr = []
     if not io.pkl_exists(constants.CONSOLE_LINK_FOR_GUIDES):
         return ['Console Link Save File, doesn\'t exist, not started']
     console_steps = create_console_steps(constants.CONSOLE_LINK_FOR_GUIDES)
     num_consoles = len(console_steps)
-    for console_idx, console in enumerate(console_steps):
-        if not io.pkl_exists(console.save_loc):
-            continue
-        game_steps = io.unpickle(console.save_loc)
-        num_games = len(game_steps)
-        str_arr.append(f'Console {console_idx} of {num_consoles} ({console.name})')
-        for game_idx, game in enumerate(game_steps):
-            if game.completion:
-                continue
-            str_arr.append(f'Game {game_idx} of {num_games} ({game.name})')
-            if not io.pkl_exists(game.name):
-                str_arr.append(f'Guide 0 of [Unknown]')
-                break
-            guide_steps = io.unpickle(game.name)
-            num_guides = len(guide_steps)
-            for guide_idx, guide in enumerate(guide_steps):
-                if guide.completion:
-                    continue
-                str_arr.append(f'Guide {guide_idx} of {num_guides}')
-        break
+    cur_console_idx, cur_console = constants.get_first_match(lambda idx, ele: io.pkl_exists(ele.save_loc), console_steps)
+    if cur_console_idx is None or cur_console is None:
+        str_arr.append(f'Don\'t know what console. There are {num_consoles} consoles in this list')
+        return str_arr
+    str_arr.append(f'Console {cur_console_idx} of {num_consoles} ({cur_console.name})')
+    game_steps = io.unpickle(cur_console.save_loc)
+    num_games = len(game_steps)
+    cur_game_idx, cur_game = constants.get_first_match(lambda idx, ele: not ele.completion, game_steps)
+    if cur_game is None or cur_console_idx is None:
+        str_arr.append(f'Don\'t know what game. There are {num_games} games in this list')
+        return str_arr
+    str_arr.append(f'  Game {cur_game_idx} of {num_games} ({cur_game.name})')
+    if not io.pkl_exists(cur_game.name):
+        str_arr.append(f'Guide 0 of [Unknown]')
+        return str_arr
+    guide_steps = io.unpickle(cur_game.name)
+    num_guides = len(guide_steps)
+    cur_guide_idx, cur_guide = constants.get_first_match(lambda idx, ele: not ele.completion, guide_steps)
+    str_arr.append(f'    Guide {cur_guide_idx} of {num_guides}')
     return str_arr
